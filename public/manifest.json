@@ -1,0 +1,21 @@
+{
+  "name": "Control de Producción & Maquila Calzado",
+  "short_name": "Calzado PWA",
+  "description": "Sistema PWA para control de inventario crudo, recepciones de maquilero y pago semanal de liquidación a destajo.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

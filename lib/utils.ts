@@ -1,0 +1,56 @@
+export function formatMXN(amount: number): string {
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+export function formatDateEs(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  return new Intl.DateTimeFormat('es-MX', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+export function formatDateShort(dateString: string): string {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  return new Intl.DateTimeFormat('es-MX', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+}
+
+/**
+ * Obtiene el rango de fechas de la semana de trabajo (Lunes a Sábado)
+ */
+export function getWorkWeekRange(): { inicio: string; fin: string } {
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0 = Dom, 1 = Lun, ..., 6 = Sáb
+  
+  // Calcular Lunes anterior/actual
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+
+  // Calcular Sábado
+  const saturday = new Date(monday);
+  saturday.setDate(monday.getDate() + 5);
+  saturday.setHours(23, 59, 59, 999);
+
+  return {
+    inicio: monday.toISOString().split('T')[0],
+    fin: saturday.toISOString().split('T')[0],
+  };
+}
