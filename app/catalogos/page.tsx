@@ -7,16 +7,25 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
-import { Maquilero, ModeloCalzado, InventarioCrudo, PedidoCliente } from '@/types/database';
+import { Maquilero, ModeloCalzado, InventarioCrudo, PedidoCliente, FichaTecnicaModeloBOM, ItemRecetaBOM, UnidadMedidaInsumo } from '@/types/database';
 import { formatMXN } from '@/lib/utils';
 
 export default function CatalogosPage() {
-  const [activeTab, setActiveTab] = useState<'maquileros' | 'modelos' | 'insumos' | 'pedidos'>('maquileros');
+  const [activeTab, setActiveTab] = useState<'maquileros' | 'modelos' | 'insumos' | 'pedidos' | 'recetas'>('maquileros');
 
   const [modelos, setModelos] = useState<ModeloCalzado[]>([]);
   const [maquileros, setMaquileros] = useState<Maquilero[]>([]);
   const [inventario, setInventario] = useState<InventarioCrudo[]>([]);
   const [pedidos, setPedidos] = useState<PedidoCliente[]>([]);
+  const [fichasTecnicas, setFichasTecnicas] = useState<FichaTecnicaModeloBOM[]>([]);
+
+  // BOM Recipe form states
+  const [selectedBOMModelo, setSelectedBOMModelo] = useState<string>('Frozen');
+  const [nuevoMaterialNombre, setNuevoMaterialNombre] = useState<string>('');
+  const [nuevoMaterialCantidad, setNuevoMaterialCantidad] = useState<string>('1.0');
+  const [nuevoMaterialUnidad, setNuevoMaterialUnidad] = useState<UnidadMedidaInsumo>('pares');
+  const [recetaEnEdicion, setRecetaEnEdicion] = useState<ItemRecetaBOM[]>([]);
+
 
   // Forms states
   const [nuevoModeloNombre, setNuevoModeloNombre] = useState<string>('');
@@ -49,6 +58,9 @@ export default function CatalogosPage() {
     setInventario(ProductionStore.getInventarioCrudo());
     setPedidos(ProductionStore.getPedidosCliente());
 
+    const fichas = ProductionStore.getFichasTecnicasBOM();
+    setFichasTecnicas(fichas);
+
     if (listModelos.length > 0 && !nuevoClienteModelo) {
       setNuevoClienteModelo(listModelos[0].nombre);
     }
@@ -57,6 +69,42 @@ export default function CatalogosPage() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  useEffect(() => {
+    if (selectedBOMModelo) {
+      const ficha = ProductionStore.getFichaTecnicaPorModelo(selectedBOMModelo);
+      setRecetaEnEdicion(ficha ? ficha.receta : []);
+    }
+  }, [selectedBOMModelo]);
+
+  const handleAgregarItemReceta = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevoMaterialNombre.trim()) return;
+
+    const nuevoItem: ItemRecetaBOM = {
+      id: `r-${Date.now()}`,
+      material_nombre: nuevoMaterialNombre.trim(),
+      cantidad_por_par: Math.max(0.001, parseFloat(nuevoMaterialCantidad) || 1.0),
+      unidad_medida: nuevoMaterialUnidad,
+    };
+
+    const actualizada = [...recetaEnEdicion, nuevoItem];
+    setRecetaEnEdicion(actualizada);
+    ProductionStore.guardarFichaTecnicaBOM(selectedBOMModelo, actualizada);
+    setNuevoMaterialNombre('');
+    setNuevoMaterialCantidad('1.0');
+    cargarDatos();
+    setMensaje(`¡Insumo ${nuevoItem.material_nombre} añadido a la receta de ${selectedBOMModelo}!`);
+    setTimeout(() => setMensaje(null), 2500);
+  };
+
+  const handleEliminarItemReceta = (itemId: string) => {
+    const actualizada = recetaEnEdicion.filter((i) => i.id !== itemId);
+    setRecetaEnEdicion(actualizada);
+    ProductionStore.guardarFichaTecnicaBOM(selectedBOMModelo, actualizada);
+    cargarDatos();
+  };
+
 
   const handleCrearModelo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,8 +238,19 @@ export default function CatalogosPage() {
           >
             Pedidos ({pedidos.length})
           </button>
+          <button
+            onClick={() => setActiveTab('recetas')}
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+              activeTab === 'recetas'
+                ? 'bg-zinc-800 text-white shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            Recetario (BOM)
+          </button>
         </div>
       </div>
+
 
       {mensaje && (
         <div className="bg-emerald-950/60 border border-emerald-700/80 text-emerald-200 p-3 rounded-2xl text-center text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
@@ -521,6 +580,135 @@ export default function CatalogosPage() {
           </div>
         </div>
       )}
+
+      {/* PESTAÑA 5: RECETARIO / FICHAS TÉCNICAS (BOM) */}
+      {activeTab === 'recetas' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 space-y-4">
+            <h2 className="text-sm sm:text-base font-mono font-bold text-zinc-200 uppercase border-b border-zinc-800 pb-2.5">
+              Añadir Insumo a la Receta
+            </h2>
+            <form onSubmit={handleAgregarItemReceta} className="space-y-3">
+              <div>
+                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1">
+                  Modelo de Calzado
+                </label>
+                <select
+                  value={selectedBOMModelo}
+                  onChange={(e) => setSelectedBOMModelo(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none"
+                >
+                  {modelos.map((m) => (
+                    <option key={m.id} value={m.nombre}>
+                      {m.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1">
+                  Nombre del Insumo / Material
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Pegamento, Planta, Forro, Tacón..."
+                  value={nuevoMaterialNombre}
+                  onChange={(e) => setNuevoMaterialNombre(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1">
+                    Cantidad / Par
+                  </label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    min="0"
+                    value={nuevoMaterialCantidad}
+                    onChange={(e) => setNuevoMaterialCantidad(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm font-mono font-bold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1">
+                    Unidad
+                  </label>
+                  <select
+                    value={nuevoMaterialUnidad}
+                    onChange={(e) => setNuevoMaterialUnidad(e.target.value as UnidadMedidaInsumo)}
+                    className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none"
+                  >
+                    <option value="pares">pares</option>
+                    <option value="piezas">piezas</option>
+                    <option value="litros">litros</option>
+                    <option value="metros">metros</option>
+                    <option value="unidades">unidades</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold uppercase transition-colors"
+              >
+                Agregar a Ficha Técnica
+              </button>
+            </form>
+          </div>
+
+          <div className="lg:col-span-2 bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+              <h2 className="text-sm sm:text-base font-mono font-bold text-zinc-200 uppercase">
+                Receta de Consumos (BOM) — Modelo: &quot;{selectedBOMModelo}&quot;
+              </h2>
+            </div>
+
+            {recetaEnEdicion.length === 0 ? (
+              <div className="py-10 text-center text-sm text-zinc-500">
+                No hay insumos en la receta del modelo &quot;{selectedBOMModelo}&quot;. Agrega el primero a la izquierda.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs sm:text-sm text-left">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-zinc-400 font-mono">
+                      <th className="py-2.5 px-3 font-semibold">Insumo</th>
+                      <th className="py-2.5 px-3 font-semibold text-center">Consumo por Par</th>
+                      <th className="py-2.5 px-3 font-semibold text-center">Unidad</th>
+                      <th className="py-2.5 px-3 font-semibold text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {recetaEnEdicion.map((item) => (
+                      <tr key={item.id} className="hover:bg-zinc-800/40">
+                        <td className="py-2.5 px-3 font-bold text-zinc-100">{item.material_nombre}</td>
+                        <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-400">
+                          {item.cantidad_por_par}
+                        </td>
+                        <td className="py-2.5 px-3 text-center text-zinc-400">{item.unidad_medida}</td>
+                        <td className="py-2.5 px-3 text-right">
+                          <button
+                            onClick={() => handleEliminarItemReceta(item.id)}
+                            className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -5,7 +5,65 @@
 
 export type EstatusOrden = 'Pendiente' | 'Completado';
 
+export type EtapaProduccion =
+  | 'Corte'
+  | 'Pespunte'
+  | 'Forrado'
+  | 'Montado'
+  | 'Adornado'
+  | 'Producto Terminado';
+
+export interface LoteProduccion {
+  id: string;
+  folio: string; // Ej. "LOT-2026-001"
+  modelo: string;
+  total_pares: number;
+  etapa_actual: EtapaProduccion;
+  maquilero_id?: string;
+  maquilero_nombre?: string;
+  fecha_inicio: string; // YYYY-MM-DD
+  desglose_tallas: { talla: number; pares: number }[];
+  notas?: string;
+}
+
+export interface HistorialMovimientoLote {
+  id: string;
+  lote_id: string;
+  etapa_origen: EtapaProduccion;
+  etapa_destino: EtapaProduccion;
+  fecha: string; // ISO String
+  maquilero_nombre?: string;
+  notas?: string;
+}
+
+export type UnidadMedidaInsumo = 'pares' | 'piezas' | 'litros' | 'metros' | 'unidades';
+
+export interface ItemRecetaBOM {
+  id: string;
+  material_nombre: string;
+  cantidad_por_par: number; // Ej. 1.0 (pares), 0.05 (litros), 0.20 (metros)
+  unidad_medida: UnidadMedidaInsumo;
+}
+
+export interface FichaTecnicaModeloBOM {
+  id: string;
+  modelo_nombre: string;
+  receta: ItemRecetaBOM[];
+  notas?: string;
+}
+
+export interface ResultadoExplosionMateriales {
+  material_nombre: string;
+  unidad_medida: UnidadMedidaInsumo;
+  cantidad_requerida_total: number;
+  stock_actual: number;
+  diferencia_stock: number; // stock_actual - requerida
+  suficiente: boolean;
+}
+
 export interface Maquilero {
+
+
   id: string;
   nombre: string;
   tarifa_por_par: number; // Ej. 14.50 MXN
@@ -40,6 +98,13 @@ export interface OrdenSalidaDetalle {
   pares_enviados: number;
 }
 
+export type TipoDefectoQC =
+  | 'Piel Manchada/Abierta'
+  | 'Costura Desalineada'
+  | 'Planta/Tacón Despegado'
+  | 'Merma Irreparable'
+  | 'Otro Defecto';
+
 export interface Recepcion {
   id: string;
   orden_detalle_id: string;
@@ -47,6 +112,10 @@ export interface Recepcion {
   pares_completos_entregados: number;
   faltantes_izquierdos: number;
   faltantes_derechos: number;
+  pares_segunda?: number;
+  mermas_totales?: number;
+  tipo_defecto?: TipoDefectoQC;
+  cargo_maquilero_mxn?: number;
   nota: string | null;
   alerta_activa: boolean;
 }
@@ -80,6 +149,10 @@ export interface AlertaIncompletaView {
   pares_completos: number;
   faltantes_izquierdos: number;
   faltantes_derechos: number;
+  pares_segunda?: number;
+  mermas_totales?: number;
+  tipo_defecto?: TipoDefectoQC;
+  cargo_maquilero_mxn?: number;
   nota: string;
   alerta_activa: boolean;
 }
@@ -92,6 +165,10 @@ export interface CorteSabatinoItem {
   pares_completos: number;
   faltantes_izq: number;
   faltantes_der: number;
+  pares_segunda?: number;
+  mermas_totales?: number;
+  tipo_defecto?: TipoDefectoQC;
+  cargo_maquilero_mxn?: number;
   tarifa_unitaria: number;
   subtotal_pagar: number;
   nota: string | null;
@@ -105,6 +182,9 @@ export interface ResumenCorteSabatino {
   fecha_fin: string;
   total_pares_completos: number;
   total_faltantes_piezas: number;
+  total_pares_segunda?: number;
+  total_mermas?: number;
+  total_cargos_qc_mxn?: number;
   total_pagar_mxn: number;
   items: CorteSabatinoItem[];
   incidencias: {
@@ -115,6 +195,7 @@ export interface ResumenCorteSabatino {
     nota: string;
   }[];
 }
+
 
 export type ResumenPagoSemanal = ResumenCorteSabatino;
 
@@ -129,8 +210,12 @@ export interface TicketPagoSemanalGuardado {
   fecha_fin: string;
   total_pares_completos: number;
   total_faltantes_piezas: number;
+  total_pares_segunda?: number;
+  total_mermas?: number;
+  total_cargos_qc_mxn?: number;
   total_pagar_mxn: number;
   items: CorteSabatinoItem[];
+
   incidencias: {
     fecha: string;
     modelo: string;

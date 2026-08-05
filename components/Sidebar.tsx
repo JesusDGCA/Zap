@@ -16,6 +16,8 @@ import {
   ChevronRight,
   Menu,
   X,
+  Layers,
+  Flame,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
 
@@ -38,20 +40,26 @@ export default function Sidebar() {
   };
 
   const handleResetData = () => {
-    if (confirm('¿Deseas reiniciar la base de datos a los valores iniciales de prueba?')) {
-      ProductionStore.resetToDefault();
+    if (confirm('⚠️ ¿Estás seguro de que deseas vaciar TODOS los datos para empezar la base de datos desde 0?')) {
+      ProductionStore.clearAllData();
       window.location.reload();
     }
   };
 
+
   const navItems = [
     { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { label: 'Salida a Maquila', href: '/salida', icon: Truck },
+    { label: '1. Enviar / Lanzar Lote', href: '/salida', icon: Truck },
+    { label: '2. Recibir Lote', href: '/recepcion', icon: PackageCheck },
+    { label: '3. Ver Planta (WIP)', href: '/procesos', icon: Layers },
+    { label: '4. Pagar Raya Semanal', href: '/pago-semanal', icon: Receipt },
+    { label: 'Explosión Insumos (MRP)', href: '/explosion-materiales', icon: Flame },
     { label: 'Salidas Almacén', href: '/salidas-generales', icon: PackageMinus },
-    { label: 'Recepción', href: '/recepcion', icon: PackageCheck },
-    { label: 'Pago Semanal', href: '/pago-semanal', icon: Receipt },
     { label: 'Catálogos & Stock', href: '/catalogos', icon: FolderPlus },
   ];
+
+
+
 
   return (
     <>
@@ -183,14 +191,15 @@ export default function Sidebar() {
 
           <button
             onClick={handleResetData}
-            title="Reiniciar datos de demo"
-            className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 text-xs sm:text-sm font-semibold text-zinc-400 hover:text-zinc-200 bg-zinc-800/40 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all ${
+            title="Vaciar base de datos para empezar de 0"
+            className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 text-xs sm:text-sm font-semibold text-rose-400 hover:text-rose-200 bg-rose-950/30 hover:bg-rose-900/40 border border-rose-900/60 rounded-xl transition-all ${
               isCollapsed && !mobileOpen ? 'px-0' : ''
             }`}
           >
             <RefreshCw className="w-4 h-4 shrink-0" />
-            {(!isCollapsed || mobileOpen) && <span>Reset Demo</span>}
+            {(!isCollapsed || mobileOpen) && <span>Vaciar Todo (0)</span>}
           </button>
+
         </div>
       </aside>
 

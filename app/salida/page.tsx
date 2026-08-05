@@ -147,11 +147,20 @@ export default function SalidaPage() {
       tallas: tallasArray,
     });
 
+    // Descuento automático de stock de insumos por Recetario BOM exacto por talla
+    const descResult = ProductionStore.descontarStockPorExplosion(selectedModeloNombre, result.totalPares, tallasArray);
+
     const maq = maquileros.find((m) => m.id === selectedMaquileroId);
 
+    const detalleDescuentoStr = descResult.resumenInsumos.length > 0
+      ? ` Resumen de autodescuento: ${descResult.resumenInsumos.join(' | ')}.`
+      : '';
+
     setMensajeExito(
-      `¡Orden ${result.ordenId} generada exitosamente! ${result.totalPares} pares de ${selectedModeloNombre} para ${maq?.nombre}.`
+      `⚡ ¡Orden ${result.ordenId} generada exitosamente! ${result.totalPares} pares de ${selectedModeloNombre} para ${maq?.nombre}.${detalleDescuentoStr}`
     );
+
+
 
     // Asignar el ticket recién creado para visualización e impresión inmediata
     setTicketOrdenActual(result.ordenCompleta);

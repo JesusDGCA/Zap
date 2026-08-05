@@ -16,164 +16,25 @@ import {
   PedidoCliente,
   DetalleTallaPedido,
   SalidaGeneral,
+  EtapaProduccion,
+  LoteProduccion,
+  HistorialMovimientoLote,
+  ItemRecetaBOM,
+  FichaTecnicaModeloBOM,
+  ResultadoExplosionMateriales,
 } from '@/types/database';
 
-export const INITIAL_MAQUILEROS: Maquilero[] = [
-  { id: 'mq-1', nombre: 'Miguel - Forrado de Plantas', tarifa_por_par: 14.50 },
-  { id: 'mq-2', nombre: 'Don Beto - Forrados Especiales', tarifa_por_par: 16.00 },
-  { id: 'mq-3', nombre: 'Taller El Chino - Tacones y Plataformas', tarifa_por_par: 18.00 },
-];
-
-export const INITIAL_MODELOS: ModeloCalzado[] = [
-  { id: 'mod-1', nombre: 'Frozen', estilo: 'Sandalia Plataforma' },
-  { id: 'mod-2', nombre: 'Carol', estilo: 'Zapatilla Tacón Medio' },
-  { id: 'mod-3', nombre: 'Carmin', estilo: 'Zapatilla Stiletto 7cm' },
-  { id: 'mod-4', nombre: 'Stiletto Verona', estilo: 'Zapatilla Fiesta' },
-];
-
-export const INITIAL_INVENTARIO_CRUDO: InventarioCrudo[] = [
-  { id: 'inv-1', tipo_material: 'Planta Modelo Frozen', talla: 22.0, cantidad_total: 500 },
-  { id: 'inv-2', tipo_material: 'Planta Modelo Frozen', talla: 23.0, cantidad_total: 600 },
-  { id: 'inv-3', tipo_material: 'Planta Modelo Frozen', talla: 24.0, cantidad_total: 750 },
-  { id: 'inv-4', tipo_material: 'Planta Modelo Frozen', talla: 25.0, cantidad_total: 500 },
-  { id: 'inv-5', tipo_material: 'Planta Modelo Frozen', talla: 26.0, cantidad_total: 400 },
-  { id: 'inv-6', tipo_material: 'Planta Modelo Carol', talla: 24.0, cantidad_total: 450 },
-  { id: 'inv-7', tipo_material: 'Planta Modelo Carmin', talla: 25.0, cantidad_total: 400 },
-  { id: 'inv-8', tipo_material: 'Tacón Luis XV 7cm', talla: 24.0, cantidad_total: 300 },
-  { id: 'inv-9', tipo_material: 'Rollo Material Piel Sintética', talla: 0, cantidad_total: 50 },
-];
-
-export const INITIAL_ORDENES_SALIDA: OrdenSalida[] = [
-  {
-    id: 'ORD-2026-001',
-    maquilero_id: 'mq-1',
-    modelo: 'Frozen',
-    fecha_envio: '2026-07-26',
-    estatus: 'Pendiente',
-  },
-  {
-    id: 'ORD-2026-002',
-    maquilero_id: 'mq-1',
-    modelo: 'Carol',
-    fecha_envio: '2026-07-27',
-    estatus: 'Pendiente',
-  },
-  {
-    id: 'ORD-2026-003',
-    maquilero_id: 'mq-2',
-    modelo: 'Stiletto Verona',
-    fecha_envio: '2026-07-25',
-    estatus: 'Pendiente',
-  },
-];
-
-export const INITIAL_ORDENES_SALIDA_DETALLE: OrdenSalidaDetalle[] = [
-  { id: 'dt-101', orden_id: 'ORD-2026-001', talla: 22.0, pares_enviados: 40 },
-  { id: 'dt-102', orden_id: 'ORD-2026-001', talla: 23.0, pares_enviados: 40 },
-  { id: 'dt-103', orden_id: 'ORD-2026-001', talla: 25.0, pares_enviados: 50 },
-  { id: 'dt-104', orden_id: 'ORD-2026-001', talla: 26.0, pares_enviados: 20 },
-  { id: 'dt-105', orden_id: 'ORD-2026-002', talla: 24.0, pares_enviados: 88 },
-  { id: 'dt-106', orden_id: 'ORD-2026-003', talla: 23.0, pares_enviados: 40 },
-  { id: 'dt-107', orden_id: 'ORD-2026-003', talla: 24.0, pares_enviados: 60 },
-];
-
-export const INITIAL_RECEPCIONES: Recepcion[] = [
-  {
-    id: 'rec-1',
-    orden_detalle_id: 'dt-103',
-    fecha_recepcion: new Date(Date.now() - 3600000 * 3).toISOString(),
-    pares_completos_entregados: 48,
-    faltantes_izquierdos: 2,
-    faltantes_derechos: 0,
-    nota: 'Suela raspada en montado, faltan 2 izq.',
-    alerta_activa: true,
-  },
-];
-
-export const INITIAL_TICKETS_PAGOS: TicketPagoSemanalGuardado[] = [
-  {
-    id: 'ticket-demo-1',
-    folio: 'TCK-2026-001',
-    fecha_guardado: new Date(Date.now() - 86400000 * 7).toISOString(),
-    maquilero_id: 'mq-1',
-    maquilero_nombre: 'Miguel - Forrado de Plantas',
-    tarifa_por_par: 14.50,
-    fecha_inicio: '2026-07-20',
-    fecha_fin: '2026-07-25',
-    total_pares_completos: 150,
-    total_faltantes_piezas: 2,
-    total_pagar_mxn: 2175.00,
-    items: [
-      {
-        recepcion_id: 'rec-demo-1',
-        fecha: new Date(Date.now() - 86400000 * 8).toISOString(),
-        modelo: 'Frozen',
-        talla: 24,
-        pares_completos: 150,
-        faltantes_izq: 2,
-        faltantes_der: 0,
-        tarifa_unitaria: 14.50,
-        subtotal_pagar: 2175.00,
-        nota: 'Pago semana previa registrado correctamente.',
-      },
-    ],
-    incidencias: [
-      {
-        fecha: new Date(Date.now() - 86400000 * 8).toISOString(),
-        modelo: 'Frozen',
-        talla: 24,
-        faltantes: 'Izq: 2 | Der: 0',
-        nota: 'Detalle de 2 pies faltantes reportados.',
-      },
-    ],
-  },
-];
-
-export const INITIAL_PEDIDOS_CLIENTES: PedidoCliente[] = [
-  {
-    id: 'ped-clasben-001',
-    folio: 'PED-2026-900',
-    cliente: 'Clasben',
-    modelo: 'Frozen',
-    fecha_pedido: '2026-07-28',
-    total_pares: 900,
-    estatus: 'En Producción',
-    notas: 'Pedido especial de tienda Clasben con entrega prioritaria por puntos.',
-    desglose_tallas: [
-      { talla: 22.0, pares_solicitados: 150, pares_enviados_lotes: 100 },
-      { talla: 23.0, pares_solicitados: 200, pares_enviados_lotes: 150 },
-      { talla: 24.0, pares_solicitados: 250, pares_enviados_lotes: 200 },
-      { talla: 25.0, pares_solicitados: 200, pares_enviados_lotes: 100 },
-      { talla: 26.0, pares_solicitados: 100, pares_enviados_lotes: 50 },
-    ],
-  },
-];
-
-export const INITIAL_SALIDAS_GENERALES: SalidaGeneral[] = [
-  {
-    id: 'sg-demo-1',
-    folio: 'SG-2026-001',
-    fecha: '2026-07-28',
-    tipo_material: 'Pegamento Blanco',
-    cantidad: 5,
-    unidad: 'litros',
-    motivo_concepto: 'Consumo Interno Planta',
-    entregado_a: 'Área de Montado / Pegado',
-    notas: 'Surte para consumo semanal de la mesa 2.',
-  },
-  {
-    id: 'sg-demo-2',
-    folio: 'SG-2026-002',
-    fecha: '2026-07-29',
-    tipo_material: 'Planta Modelo Frozen',
-    talla: 24.0,
-    cantidad: 10,
-    unidad: 'pares',
-    motivo_concepto: 'Merma / Dañado',
-    entregado_a: 'Control de Calidad',
-    notas: 'Plantas dobladas durante transportación interna.',
-  },
-];
+export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [];
+export const INITIAL_LOTES_PRODUCCION: LoteProduccion[] = [];
+export const INITIAL_MAQUILEROS: Maquilero[] = [];
+export const INITIAL_MODELOS: ModeloCalzado[] = [];
+export const INITIAL_INVENTARIO_CRUDO: InventarioCrudo[] = [];
+export const INITIAL_ORDENES_SALIDA: OrdenSalida[] = [];
+export const INITIAL_ORDENES_SALIDA_DETALLE: OrdenSalidaDetalle[] = [];
+export const INITIAL_RECEPCIONES: Recepcion[] = [];
+export const INITIAL_TICKETS_PAGOS: TicketPagoSemanalGuardado[] = [];
+export const INITIAL_PEDIDOS_CLIENTES: PedidoCliente[] = [];
+export const INITIAL_SALIDAS_GENERALES: SalidaGeneral[] = [];
 
 const STORAGE_KEYS = {
   MAQUILEROS: 'calzado_pwa_maquileros',
@@ -185,10 +46,25 @@ const STORAGE_KEYS = {
   TICKETS_PAGOS: 'calzado_pwa_tickets_pagos',
   PEDIDOS: 'calzado_pwa_pedidos_clientes',
   SALIDAS_GENERALES: 'calzado_pwa_salidas_generales',
+  LOTES_PRODUCCION: 'calzado_pwa_lotes_produccion',
+  HISTORIAL_MOVIMIENTOS: 'calzado_pwa_historial_movimientos',
+  FICHAS_TECNICAS_BOM: 'calzado_pwa_fichas_tecnicas_bom',
 };
+
+function checkAndAutoPurgeOnce(): void {
+  if (typeof window === 'undefined') return;
+  if (localStorage.getItem('calzado_pwa_system_wiped_clean_v1') !== 'true') {
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      localStorage.removeItem(key);
+      localStorage.setItem(key, JSON.stringify([]));
+    });
+    localStorage.setItem('calzado_pwa_system_wiped_clean_v1', 'true');
+  }
+}
 
 function getStoredData<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
+  checkAndAutoPurgeOnce();
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : fallback;
@@ -207,8 +83,273 @@ function setStoredData<T>(key: string, value: T): void {
   }
 }
 
+
 export class ProductionStore {
+  // RECETARIO Y FICHAS TÉCNICAS (BOM & EXPLOSIÓN DE MATERIALES)
+  static getFichasTecnicasBOM(): FichaTecnicaModeloBOM[] {
+    return getStoredData(STORAGE_KEYS.FICHAS_TECNICAS_BOM, INITIAL_FICHAS_TECNICAS_BOM);
+  }
+
+  static getFichaTecnicaPorModelo(modeloNombre: string): FichaTecnicaModeloBOM | undefined {
+    const list = this.getFichasTecnicasBOM();
+    return list.find((f) => f.modelo_nombre.toLowerCase() === modeloNombre.toLowerCase());
+  }
+
+  static guardarFichaTecnicaBOM(
+    modeloNombre: string,
+    receta: ItemRecetaBOM[],
+    notas?: string
+  ): FichaTecnicaModeloBOM {
+    const list = this.getFichasTecnicasBOM();
+    const index = list.findIndex((f) => f.modelo_nombre.toLowerCase() === modeloNombre.toLowerCase());
+
+    const nuevaFicha: FichaTecnicaModeloBOM = {
+      id: index !== -1 ? list[index].id : `bom-${Date.now()}`,
+      modelo_nombre: modeloNombre,
+      receta,
+      notas,
+    };
+
+    if (index !== -1) {
+      list[index] = nuevaFicha;
+    } else {
+      list.unshift(nuevaFicha);
+    }
+
+    setStoredData(STORAGE_KEYS.FICHAS_TECNICAS_BOM, list);
+    return nuevaFicha;
+  }
+
+  static calcularExplosionMateriales(
+    modeloNombre: string,
+    totalPares: number
+  ): ResultadoExplosionMateriales[] {
+    const ficha = this.getFichaTecnicaPorModelo(modeloNombre);
+    if (!ficha || ficha.receta.length === 0) return [];
+
+    const inventario = this.getInventarioCrudo();
+
+    return ficha.receta.map((item) => {
+      const cantidadRequeridaTotal = Number((item.cantidad_por_par * totalPares).toFixed(2));
+
+      // Buscar coincidencia en inventario por nombre de material
+      const invMatches = inventario.filter((inv) =>
+        inv.tipo_material.toLowerCase().includes(item.material_nombre.toLowerCase())
+      );
+
+      const stockActual = invMatches.reduce((sum, inv) => sum + inv.cantidad_total, 0);
+      const diferenciaStock = stockActual - cantidadRequeridaTotal;
+      const suficiente = diferenciaStock >= 0;
+
+      return {
+        material_nombre: item.material_nombre,
+        unidad_medida: item.unidad_medida,
+        cantidad_requerida_total: cantidadRequeridaTotal,
+        stock_actual: stockActual,
+        diferencia_stock: diferenciaStock,
+        suficiente,
+      };
+    });
+  }
+
+  static descontarStockPorExplosion(
+    modeloNombre: string,
+    totalPares: number,
+    desgloseTallas?: { talla: number; pares: number }[]
+  ): { exito: boolean; resumenInsumos: string[] } {
+    const ficha = this.getFichaTecnicaPorModelo(modeloNombre);
+    if (!ficha || ficha.receta.length === 0) {
+      return { exito: false, resumenInsumos: [] };
+    }
+
+    const inventario = this.getInventarioCrudo();
+    const resumenInsumos: string[] = [];
+
+    for (const item of ficha.receta) {
+      const esPorParOTalla = item.unidad_medida === 'pares' || item.unidad_medida === 'piezas';
+
+      if (esPorParOTalla && desgloseTallas && desgloseTallas.length > 0) {
+        // Descuento exacto por talla para componentes por par (ej. Planta, Suela, Tacón)
+        for (const tItem of desgloseTallas) {
+          if (tItem.pares <= 0) continue;
+          const cantidadDescontar = Number((item.cantidad_por_par * tItem.pares).toFixed(2));
+
+          // Buscar coincidencia en inventario por tipo_material y talla
+          let invMatch = inventario.find(
+            (inv) =>
+              inv.tipo_material.toLowerCase().includes(item.material_nombre.toLowerCase()) &&
+              Number(inv.talla) === Number(tItem.talla)
+          );
+
+          if (!invMatch) {
+            // Si no existe entrada específica de talla, busca genérica por material
+            invMatch = inventario.find((inv) =>
+              inv.tipo_material.toLowerCase().includes(item.material_nombre.toLowerCase())
+            );
+          }
+
+          if (invMatch) {
+            invMatch.cantidad_total = Math.max(0, invMatch.cantidad_total - cantidadDescontar);
+            resumenInsumos.push(
+              `${item.material_nombre} #${tItem.talla}: -${cantidadDescontar} ${item.unidad_medida}`
+            );
+          }
+        }
+      } else {
+        // Descuento global por volumen de consumibles (ej. Pegamento, Forro, Hilo)
+        let porDescontar = Number((item.cantidad_por_par * totalPares).toFixed(2));
+        const cantidadTotalDescontada = porDescontar;
+
+        for (const inv of inventario) {
+          if (inv.tipo_material.toLowerCase().includes(item.material_nombre.toLowerCase())) {
+            if (inv.cantidad_total >= porDescontar) {
+              inv.cantidad_total -= porDescontar;
+              porDescontar = 0;
+              break;
+            } else {
+              porDescontar -= inv.cantidad_total;
+              inv.cantidad_total = 0;
+            }
+          }
+        }
+        resumenInsumos.push(
+          `${item.material_nombre}: -${cantidadTotalDescontada} ${item.unidad_medida}`
+        );
+      }
+    }
+
+    setStoredData(STORAGE_KEYS.INVENTARIO, inventario);
+    return { exito: true, resumenInsumos };
+  }
+
+
+  // GESTIÓN DE LOTES DE PRODUCCIÓN (WIP - WORK IN PROGRESS)
+  static getLotesProduccion(): LoteProduccion[] {
+    return getStoredData(STORAGE_KEYS.LOTES_PRODUCCION, INITIAL_LOTES_PRODUCCION);
+  }
+
+  static getHistorialMovimientos(): HistorialMovimientoLote[] {
+    return getStoredData(STORAGE_KEYS.HISTORIAL_MOVIMIENTOS, []);
+  }
+
+  static crearLoteProduccion(input: {
+    modelo: string;
+    desglose_tallas: { talla: number; pares: number }[];
+    notas?: string;
+  }): LoteProduccion {
+    const lotes = this.getLotesProduccion();
+    const totalPares = input.desglose_tallas.reduce((sum, item) => sum + item.pares, 0);
+
+    const numLote = lotes.length + 1;
+    const folio = `LOT-2026-${String(numLote).padStart(3, '0')}`;
+
+    const nuevoLote: LoteProduccion = {
+      id: `lote-${Date.now()}`,
+      folio,
+      modelo: input.modelo,
+      total_pares: totalPares,
+      etapa_actual: 'Corte',
+      fecha_inicio: new Date().toISOString().split('T')[0],
+      desglose_tallas: input.desglose_tallas.filter((t) => t.pares > 0),
+      notas: input.notas,
+    };
+
+    lotes.unshift(nuevoLote);
+    setStoredData(STORAGE_KEYS.LOTES_PRODUCCION, lotes);
+
+    // Descuento automático de inventario crudo por Recetario (BOM) exacto por talla
+    this.descontarStockPorExplosion(nuevoLote.modelo, totalPares, input.desglose_tallas);
+
+    // Registro inicial en historial
+    const historial = this.getHistorialMovimientos();
+    historial.unshift({
+      id: `mov-${Date.now()}`,
+      lote_id: nuevoLote.id,
+      etapa_origen: 'Corte',
+      etapa_destino: 'Corte',
+      fecha: new Date().toISOString(),
+      notas: 'Lote ingresado a Producción (Corte de Material con autodescuento de insumos)',
+    });
+    setStoredData(STORAGE_KEYS.HISTORIAL_MOVIMIENTOS, historial);
+
+    return nuevoLote;
+
+  }
+
+  static avanzarEtapaLote(input: {
+    lote_id: string;
+    nueva_etapa: EtapaProduccion;
+    maquilero_id?: string;
+    notas?: string;
+  }): LoteProduccion | null {
+    const lotes = this.getLotesProduccion();
+    const index = lotes.findIndex((l) => l.id === input.lote_id);
+    if (index === -1) return null;
+
+    const loteAnterior = lotes[index];
+    const etapaOrigen = loteAnterior.etapa_actual;
+
+    let maquileroNombre: string | undefined = undefined;
+    if (input.maquilero_id) {
+      const maq = this.getMaquileros().find((m) => m.id === input.maquilero_id);
+      maquileroNombre = maq ? maq.nombre : undefined;
+    }
+
+    const loteActualizado: LoteProduccion = {
+      ...loteAnterior,
+      etapa_actual: input.nueva_etapa,
+      maquilero_id: input.maquilero_id || loteAnterior.maquilero_id,
+      maquilero_nombre: maquileroNombre || loteAnterior.maquilero_nombre,
+      notas: input.notas || loteAnterior.notas,
+    };
+
+    lotes[index] = loteActualizado;
+    setStoredData(STORAGE_KEYS.LOTES_PRODUCCION, lotes);
+
+    // Historial
+    const historial = this.getHistorialMovimientos();
+    historial.unshift({
+      id: `mov-${Date.now()}`,
+      lote_id: input.lote_id,
+      etapa_origen: etapaOrigen,
+      etapa_destino: input.nueva_etapa,
+      fecha: new Date().toISOString(),
+      maquilero_nombre: maquileroNombre,
+      notas: input.notas,
+    });
+    setStoredData(STORAGE_KEYS.HISTORIAL_MOVIMIENTOS, historial);
+
+    return loteActualizado;
+  }
+
+  static getResumenWIPPorEtapa(): { [etapa in EtapaProduccion]: { lotesCount: number; paresCount: number } } {
+    const lotes = this.getLotesProduccion();
+    const etapas: EtapaProduccion[] = [
+      'Corte',
+      'Pespunte',
+      'Forrado',
+      'Montado',
+      'Adornado',
+      'Producto Terminado',
+    ];
+
+    const resumen: any = {};
+    etapas.forEach((e) => {
+      resumen[e] = { lotesCount: 0, paresCount: 0 };
+    });
+
+    lotes.forEach((l) => {
+      if (resumen[l.etapa_actual]) {
+        resumen[l.etapa_actual].lotesCount += 1;
+        resumen[l.etapa_actual].paresCount += l.total_pares;
+      }
+    });
+
+    return resumen;
+  }
+
   // CATÁLOGO DE MAQUILEROS
+
   static getMaquileros(): Maquilero[] {
     return getStoredData(STORAGE_KEYS.MAQUILEROS, INITIAL_MAQUILEROS);
   }
@@ -322,7 +463,45 @@ export class ProductionStore {
     setStoredData(STORAGE_KEYS.DETALLES, detalles);
     setStoredData(STORAGE_KEYS.INVENTARIO, inventario);
 
+    // Descuento automático por Recetario (BOM) exacto por talla y consumibles
+    this.descontarStockPorExplosion(input.modelo, totalPares, input.tallas);
+
     const maq = this.getMaquileros().find((m) => m.id === input.maquilero_id);
+
+    // Sincronización Automática con Tablero WIP (/procesos):
+    // Crear el Lote de Producción correspondiente para que aparezca de inmediato en la etapa de Corte/Pespunte
+    const lotes = this.getLotesProduccion();
+    const numLote = lotes.length + 1;
+    const folioLote = `LOT-2026-${String(numLote).padStart(3, '0')}`;
+
+    const nuevoLote: LoteProduccion = {
+      id: `lote-${Date.now()}`,
+      folio: folioLote,
+      modelo: input.modelo,
+      total_pares: totalPares,
+      etapa_actual: 'Corte',
+      maquilero_id: input.maquilero_id,
+      maquilero_nombre: maq ? maq.nombre : undefined,
+      fecha_inicio: new Date().toISOString().split('T')[0],
+      desglose_tallas: input.tallas.filter((t) => t.pares > 0),
+      notas: `Salida de Maquila ${ordenId}`,
+    };
+
+    lotes.unshift(nuevoLote);
+    setStoredData(STORAGE_KEYS.LOTES_PRODUCCION, lotes);
+
+    // Registro en Historial de Movimientos de Producción
+    const historial = this.getHistorialMovimientos();
+    historial.unshift({
+      id: `mov-${Date.now()}`,
+      lote_id: nuevoLote.id,
+      etapa_origen: 'Corte',
+      etapa_destino: 'Corte',
+      fecha: new Date().toISOString(),
+      maquilero_nombre: maq ? maq.nombre : undefined,
+      notas: `Lote ingresado a Producción mediante Orden de Salida ${ordenId}`,
+    });
+    setStoredData(STORAGE_KEYS.HISTORIAL_MOVIMIENTOS, historial);
 
     const ordenCompleta: OrdenSalidaConMaquilero = {
       ...nuevaOrden,
@@ -333,6 +512,7 @@ export class ProductionStore {
     };
 
     return { ordenId, totalPares, ordenCompleta };
+
   }
 
   static getModelosDisponiblesMaquilero(maquileroId: string): {
@@ -440,6 +620,10 @@ export class ProductionStore {
       pares_completos: number;
       faltantes_izq: number;
       faltantes_der: number;
+      pares_segunda?: number;
+      mermas_totales?: number;
+      tipo_defecto?: any;
+      cargo_maquilero_mxn?: number;
     }[];
     nota: string;
   }): { totalRegistrados: number; contieneAlerta: boolean } {
@@ -451,13 +635,19 @@ export class ProductionStore {
     let contieneAlerta = false;
 
     const tieneFaltantesTotales = input.items.some(
-      (it) => it.faltantes_izq > 0 || it.faltantes_der > 0
+      (it) => it.faltantes_izq > 0 || it.faltantes_der > 0 || (it.mermas_totales || 0) > 0 || (it.cargo_maquilero_mxn || 0) > 0
     );
     const tieneNota = input.nota.trim().length > 0;
     const generaAlertaGlobal = tieneFaltantesTotales || tieneNota;
 
     for (const item of input.items) {
-      if (item.pares_completos <= 0 && item.faltantes_izq <= 0 && item.faltantes_der <= 0) {
+      if (
+        item.pares_completos <= 0 &&
+        item.faltantes_izq <= 0 &&
+        item.faltantes_der <= 0 &&
+        (item.pares_segunda || 0) <= 0 &&
+        (item.mermas_totales || 0) <= 0
+      ) {
         continue;
       }
 
@@ -485,12 +675,18 @@ export class ProductionStore {
           id: `dt-auto-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
           orden_id: ordenMatch.id,
           talla: item.talla,
-          pares_enviados: item.pares_completos + item.faltantes_izq + item.faltantes_der,
+          pares_enviados: item.pares_completos + item.faltantes_izq + item.faltantes_der + (item.mermas_totales || 0),
         };
         detalles.unshift(dtMatch);
       }
 
-      const esAlertaItem = item.faltantes_izq > 0 || item.faltantes_der > 0 || generaAlertaGlobal;
+      const esAlertaItem =
+        item.faltantes_izq > 0 ||
+        item.faltantes_der > 0 ||
+        (item.mermas_totales || 0) > 0 ||
+        (item.cargo_maquilero_mxn || 0) > 0 ||
+        generaAlertaGlobal;
+
       if (esAlertaItem) contieneAlerta = true;
 
       const nuevaRecepcion: Recepcion = {
@@ -500,7 +696,15 @@ export class ProductionStore {
         pares_completos_entregados: item.pares_completos,
         faltantes_izquierdos: item.faltantes_izq,
         faltantes_derechos: item.faltantes_der,
-        nota: tieneNota ? input.nota.trim() : (item.faltantes_izq > 0 || item.faltantes_der > 0 ? `Faltante de piezas en ${item.modelo} talla ${item.talla}` : null),
+        pares_segunda: item.pares_segunda || 0,
+        mermas_totales: item.mermas_totales || 0,
+        tipo_defecto: item.tipo_defecto || undefined,
+        cargo_maquilero_mxn: item.cargo_maquilero_mxn || 0,
+        nota: tieneNota
+          ? input.nota.trim()
+          : item.tipo_defecto
+          ? `Defecto QC (${item.tipo_defecto}): ${item.mermas_totales || 0} mermas / ${item.pares_segunda || 0} 2das`
+          : null,
         alerta_activa: esAlertaItem,
       };
 
@@ -512,8 +716,29 @@ export class ProductionStore {
     setStoredData(STORAGE_KEYS.DETALLES, detalles);
     setStoredData(STORAGE_KEYS.RECEPCIONES, recepciones);
 
+    // Sincronizar actualización de Lote WIP en /procesos a 'Producto Terminado'
+    const lotes = this.getLotesProduccion();
+    let lotesCambiados = false;
+
+    for (const item of input.items) {
+      const loteMatch = lotes.find(
+        (l) =>
+          l.modelo.toLowerCase() === item.modelo.toLowerCase() &&
+          l.etapa_actual !== 'Producto Terminado'
+      );
+      if (loteMatch) {
+        loteMatch.etapa_actual = 'Producto Terminado';
+        lotesCambiados = true;
+      }
+    }
+
+    if (lotesCambiados) {
+      setStoredData(STORAGE_KEYS.LOTES_PRODUCCION, lotes);
+    }
+
     return { totalRegistrados, contieneAlerta };
   }
+
 
   static calcularCorteSabatino(
     maquileroId: string,
@@ -543,6 +768,9 @@ export class ProductionStore {
 
     let totalParesCompletos = 0;
     let totalFaltantesPiezas = 0;
+    let totalParesSegunda = 0;
+    let totalMermas = 0;
+    let totalCargosQCMXN = 0;
 
     for (const rec of recepciones) {
       const dt = detallesMap.get(rec.orden_detalle_id);
@@ -551,11 +779,15 @@ export class ProductionStore {
       const recDate = new Date(rec.fecha_recepcion);
       if (recDate >= inicio && recDate <= fin) {
         const ord = ordenes.find((o) => o.id === dt.orden_id);
-        const subtotal = rec.pares_completos_entregados * maquilero.tarifa_por_par;
+        const subtotal = rec.pares_completos_entregados * maquilero.tarifa_por_par - (rec.cargo_maquilero_mxn || 0);
 
         totalParesCompletos += rec.pares_completos_entregados;
         const faltantesPiezas = rec.faltantes_izquierdos + rec.faltantes_derechos;
         totalFaltantesPiezas += faltantesPiezas;
+
+        totalParesSegunda += rec.pares_segunda || 0;
+        totalMermas += rec.mermas_totales || 0;
+        totalCargosQCMXN += rec.cargo_maquilero_mxn || 0;
 
         items.push({
           recepcion_id: rec.id,
@@ -565,24 +797,30 @@ export class ProductionStore {
           pares_completos: rec.pares_completos_entregados,
           faltantes_izq: rec.faltantes_izquierdos,
           faltantes_der: rec.faltantes_derechos,
+          pares_segunda: rec.pares_segunda || 0,
+          mermas_totales: rec.mermas_totales || 0,
+          tipo_defecto: rec.tipo_defecto,
+          cargo_maquilero_mxn: rec.cargo_maquilero_mxn || 0,
           tarifa_unitaria: maquilero.tarifa_por_par,
           subtotal_pagar: subtotal,
           nota: rec.nota,
         });
 
-        if (faltantesPiezas > 0 || rec.nota) {
+        if (faltantesPiezas > 0 || (rec.mermas_totales || 0) > 0 || (rec.cargo_maquilero_mxn || 0) > 0 || rec.nota) {
           incidencias.push({
             fecha: rec.fecha_recepcion,
             modelo: ord ? ord.modelo : 'N/A',
             talla: dt.talla,
-            faltantes: `Izq: ${rec.faltantes_izquierdos} | Der: ${rec.faltantes_derechos}`,
-            nota: rec.nota || 'Sin detalle de nota.',
+            faltantes: `Izq: ${rec.faltantes_izquierdos} | Der: ${rec.faltantes_derechos} | 2da: ${rec.pares_segunda || 0} | Merma: ${rec.mermas_totales || 0}`,
+            nota: rec.cargo_maquilero_mxn
+              ? `Cargo QC: -$${rec.cargo_maquilero_mxn.toFixed(2)} MXN (${rec.tipo_defecto || 'Defecto'}). ${rec.nota || ''}`
+              : rec.nota || 'Sin detalle de nota.',
           });
         }
       }
     }
 
-    const totalPagarMXN = totalParesCompletos * maquilero.tarifa_por_par;
+    const totalPagarMXN = Math.max(0, totalParesCompletos * maquilero.tarifa_por_par - totalCargosQCMXN);
 
     return {
       maquilero,
@@ -590,11 +828,15 @@ export class ProductionStore {
       fecha_fin: fechaFin,
       total_pares_completos: totalParesCompletos,
       total_faltantes_piezas: totalFaltantesPiezas,
+      total_pares_segunda: totalParesSegunda,
+      total_mermas: totalMermas,
+      total_cargos_qc_mxn: totalCargosQCMXN,
       total_pagar_mxn: totalPagarMXN,
       items,
       incidencias,
     };
   }
+
 
   static calcularPagoSemanal(
     maquileroId: string,
@@ -739,15 +981,18 @@ export class ProductionStore {
     setStoredData(STORAGE_KEYS.SALIDAS_GENERALES, salidas);
   }
 
+  static clearAllData(): void {
+    if (typeof window === 'undefined') return;
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      localStorage.removeItem(key);
+      localStorage.setItem(key, JSON.stringify([]));
+    });
+    localStorage.setItem('calzado_pwa_system_wiped_clean_v1', 'true');
+  }
+
   static resetToDefault(): void {
-    setStoredData(STORAGE_KEYS.MAQUILEROS, INITIAL_MAQUILEROS);
-    setStoredData(STORAGE_KEYS.MODELOS, INITIAL_MODELOS);
-    setStoredData(STORAGE_KEYS.INVENTARIO, INITIAL_INVENTARIO_CRUDO);
-    setStoredData(STORAGE_KEYS.ORDENES, INITIAL_ORDENES_SALIDA);
-    setStoredData(STORAGE_KEYS.DETALLES, INITIAL_ORDENES_SALIDA_DETALLE);
-    setStoredData(STORAGE_KEYS.RECEPCIONES, INITIAL_RECEPCIONES);
-    setStoredData(STORAGE_KEYS.TICKETS_PAGOS, INITIAL_TICKETS_PAGOS);
-    setStoredData(STORAGE_KEYS.PEDIDOS, INITIAL_PEDIDOS_CLIENTES);
-    setStoredData(STORAGE_KEYS.SALIDAS_GENERALES, INITIAL_SALIDAS_GENERALES);
+    this.clearAllData();
   }
 }
+
+

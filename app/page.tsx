@@ -11,6 +11,7 @@ import {
   ArrowRight,
   AlertTriangle,
   PlusCircle,
+  Layers,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
 import { OrdenSalidaConMaquilero, AlertaIncompletaView } from '@/types/database';
@@ -22,6 +23,8 @@ export default function DashboardPage() {
   const [salidasGeneralesCount, setSalidasGeneralesCount] = useState<number>(0);
   const [ticketsCount, setTicketsCount] = useState<number>(0);
   const [pedidosCount, setPedidosCount] = useState<number>(0);
+  const [totalParesWIP, setTotalParesWIP] = useState<number>(0);
+  const [totalLotesWIP, setTotalLotesWIP] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -30,6 +33,10 @@ export default function DashboardPage() {
     const actSalidasGenerales = ProductionStore.getSalidasGenerales();
     const tickets = ProductionStore.getTicketsPagoSemanal();
     const pedidos = ProductionStore.getPedidosCliente();
+    const lotes = ProductionStore.getLotesProduccion();
+
+    const lotesActivos = lotes.filter((l) => l.etapa_actual !== 'Producto Terminado');
+    const totalPares = lotesActivos.reduce((sum, l) => sum + l.total_pares, 0);
 
     setAlertasCount(actAlertas.length);
     setAlertasActivas(actAlertas);
@@ -37,8 +44,11 @@ export default function DashboardPage() {
     setSalidasGeneralesCount(actSalidasGenerales.length);
     setTicketsCount(tickets.length);
     setPedidosCount(pedidos.length);
+    setTotalParesWIP(totalPares);
+    setTotalLotesWIP(lotesActivos.length);
     setLoading(false);
   }, []);
+
 
   if (loading) {
     return (
@@ -81,12 +91,103 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* BOTONES TÁCTILES GIGANTES DE OPERACIÓN DE PLANTA (4 TAREAS INDISPENSABLES) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link
+          href="/salida"
+          className="p-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl shadow-lg border-2 border-emerald-400 flex items-center justify-between transition-all transform hover:scale-[1.01] group"
+        >
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider block opacity-90">
+              Paso 1
+            </span>
+            <span className="text-lg sm:text-xl font-extrabold block">1. Enviar / Lanzar Lote</span>
+            <span className="text-xs opacity-80 block mt-0.5">Salida a maquila y autodescuento</span>
+          </div>
+          <div className="p-3 bg-white/10 rounded-xl group-hover:bg-white/20">
+            <Truck className="w-7 h-7 text-white" />
+          </div>
+        </Link>
+
+        <Link
+          href="/recepcion"
+          className="p-5 bg-zinc-900 hover:bg-zinc-850 border-2 border-emerald-500/80 text-zinc-100 rounded-2xl shadow-lg flex items-center justify-between transition-all transform hover:scale-[1.01] group"
+        >
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider block text-emerald-400">
+              Paso 2
+            </span>
+            <span className="text-lg sm:text-xl font-extrabold block">2. Recibir Lote (1-Clic)</span>
+            <span className="text-xs text-zinc-400 block mt-0.5">Recepción rápida + mermas</span>
+          </div>
+          <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400">
+            <PackageCheck className="w-7 h-7" />
+          </div>
+        </Link>
+
+        <Link
+          href="/procesos"
+          className="p-5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-100 rounded-2xl shadow flex items-center justify-between transition-all transform hover:scale-[1.01] group"
+        >
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider block text-amber-400">
+              Paso 3
+            </span>
+            <span className="text-lg sm:text-xl font-extrabold block">3. Ver Planta (WIP)</span>
+            <span className="text-xs text-zinc-400 block mt-0.5">Lotes en avance por etapa</span>
+          </div>
+          <div className="p-3 bg-zinc-800 rounded-xl text-amber-400">
+            <Layers className="w-7 h-7" />
+          </div>
+        </Link>
+
+        <Link
+          href="/pago-semanal"
+          className="p-5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-100 rounded-2xl shadow flex items-center justify-between transition-all transform hover:scale-[1.01] group"
+        >
+          <div>
+            <span className="text-xs font-mono font-bold uppercase tracking-wider block text-cyan-400">
+              Paso 4
+            </span>
+            <span className="text-lg sm:text-xl font-extrabold block">4. Pagar Raya Semanal</span>
+            <span className="text-xs text-zinc-400 block mt-0.5">Liquidación con descuentos QC</span>
+          </div>
+          <div className="p-3 bg-zinc-800 rounded-xl text-cyan-400">
+            <Receipt className="w-7 h-7" />
+          </div>
+        </Link>
+      </div>
+
       {/* STRIP DE KPIS OPERATIVOS GRANDES Y VISIBLES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+
+        <Link
+          href="/procesos"
+          className="p-5 sm:p-6 bg-zinc-900/90 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl transition-all shadow-sm group"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
+              Procesos (WIP)
+            </span>
+            <div className="p-2 bg-zinc-800/80 rounded-xl text-emerald-400 group-hover:text-emerald-300">
+              <Layers className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-3xl sm:text-4xl font-extrabold font-mono text-zinc-100">
+              {totalParesWIP}
+            </span>
+            <span className="text-xs sm:text-sm text-zinc-400 font-medium">
+              pares ({totalLotesWIP} lotes)
+            </span>
+          </div>
+        </Link>
+
         <Link
           href="/salida"
           className="p-5 sm:p-6 bg-zinc-900/90 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl transition-all shadow-sm group"
         >
+
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
               En Tránsito

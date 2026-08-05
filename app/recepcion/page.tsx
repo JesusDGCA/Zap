@@ -11,7 +11,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
-import { Maquilero } from '@/types/database';
+import { Maquilero, TipoDefectoQC } from '@/types/database';
 
 const TALLAS_CERRADAS = [22, 23, 24, 25, 26, 27];
 
@@ -21,7 +21,12 @@ interface ItemCaptura {
   completos: number;
   faltIzq: number;
   faltDer: number;
+  segunda?: number;
+  mermas?: number;
+  tipoDefecto?: TipoDefectoQC;
+  cargoMXN?: number;
 }
+
 
 export default function RecepcionPage() {
   const router = useRouter();
@@ -68,7 +73,7 @@ export default function RecepcionPage() {
     faltDer: 0,
   };
 
-  const handleUpdateCantidad = (field: 'completos' | 'faltIzq' | 'faltDer', delta: number) => {
+  const handleUpdateCantidad = (field: 'completos' | 'faltIzq' | 'faltDer' | 'segunda' | 'mermas', delta: number) => {
     setCapturasMap((prev) => {
       const actual = prev[itemKeyActual] || {
         modelo: selectedModelo,
@@ -76,8 +81,10 @@ export default function RecepcionPage() {
         completos: 0,
         faltIzq: 0,
         faltDer: 0,
+        segunda: 0,
+        mermas: 0,
       };
-      const nuevoValor = Math.max(0, actual[field] + delta);
+      const nuevoValor = Math.max(0, (actual[field] || 0) + delta);
       return {
         ...prev,
         [itemKeyActual]: {
@@ -88,8 +95,8 @@ export default function RecepcionPage() {
     });
   };
 
-  const handleInputChange = (field: 'completos' | 'faltIzq' | 'faltDer', valStr: string) => {
-    const val = parseInt(valStr, 10);
+  const handleInputChange = (field: 'completos' | 'faltIzq' | 'faltDer' | 'segunda' | 'mermas' | 'cargoMXN', valStr: string) => {
+    const val = parseFloat(valStr);
     const num = isNaN(val) ? 0 : Math.max(0, val);
     setCapturasMap((prev) => ({
       ...prev,
@@ -100,11 +107,30 @@ export default function RecepcionPage() {
           completos: 0,
           faltIzq: 0,
           faltDer: 0,
+          segunda: 0,
+          mermas: 0,
         }),
         [field]: num,
       },
     }));
   };
+
+  const handleSetTipoDefecto = (tipo: TipoDefectoQC) => {
+    setCapturasMap((prev) => ({
+      ...prev,
+      [itemKeyActual]: {
+        ...(prev[itemKeyActual] || {
+          modelo: selectedModelo,
+          talla: selectedTalla,
+          completos: 0,
+          faltIzq: 0,
+          faltDer: 0,
+        }),
+        tipoDefecto: tipo,
+      },
+    }));
+  };
+
 
   const handleAgregarModeloPersonalizado = () => {
     if (nuevoModeloInput.trim()) {
@@ -127,11 +153,11 @@ export default function RecepcionPage() {
   };
 
   const itemsCapturadosArray = Object.values(capturasMap).filter(
-    (it) => it.completos > 0 || it.faltIzq > 0 || it.faltDer > 0
+    (it) => it.completos > 0 || it.faltIzq > 0 || it.faltDer > 0 || (it.segunda || 0) > 0 || (it.mermas || 0) > 0
   );
 
   const tieneFaltantesTotales = itemsCapturadosArray.some(
-    (it) => it.faltIzq > 0 || it.faltDer > 0
+    (it) => it.faltIzq > 0 || it.faltDer > 0 || (it.mermas || 0) > 0 || (it.cargoMXN || 0) > 0
   );
 
   const totalParesCapturados = itemsCapturadosArray.reduce((acc, it) => acc + it.completos, 0);
@@ -150,12 +176,12 @@ export default function RecepcionPage() {
     }
 
     if (itemsCapturadosArray.length === 0) {
-      setErrorValidacion('Ingresa al menos 1 par completo o faltante en la matriz de captura.');
+      setErrorValidacion('Ingresa al menos 1 par completo, de 2da o mermado en la matriz de captura.');
       return;
     }
 
     if (tieneFaltantesTotales && !notaIncidencia.trim()) {
-      setErrorValidacion('⚠️ Es obligatorio ingresar la Nota de Incidencia al registrar piezas faltantes.');
+      setErrorValidacion('⚠️ Es obligatorio ingresar la Nota de Incidencia al registrar piezas faltantes, mermas o cargos QC.');
       return;
     }
 
@@ -167,9 +193,14 @@ export default function RecepcionPage() {
         pares_completos: it.completos,
         faltantes_izq: it.faltIzq,
         faltantes_der: it.faltDer,
+        pares_segunda: it.segunda || 0,
+        mermas_totales: it.mermas || 0,
+        tipo_defecto: it.tipoDefecto,
+        cargo_maquilero_mxn: it.cargoMXN || 0,
       })),
       nota: notaIncidencia,
     });
+
 
     const maq = maquileros.find((m) => m.id === selectedMaquileroId);
 
@@ -184,30 +215,74 @@ export default function RecepcionPage() {
     }, 1500);
   };
 
+  const handleRecibirTodoCompleto = () => {
+    // Busca las órdenes del maquilero y modelo seleccionados o genera corrida estándar de 40 pares por talla
+    const ordenes = ProductionStore.getOrdenesPendientesConDetalle().filter(
+      (o) => o.maquilero_id === selectedMaquileroId && o.modelo === selectedModelo
+    );
+
+    const nuevoMap: { [key: string]: ItemCaptura } = { ...capturasMap };
+
+    TALLAS_CERRADAS.forEach((talla) => {
+      const key = `${selectedModelo}_${talla}`;
+      let paresAEnviar = 40; // Default
+
+      if (ordenes.length > 0) {
+        const dt = ordenes[0].detalles.find((d) => d.talla === talla);
+        if (dt) paresAEnviar = dt.pares_enviados;
+      }
+
+      nuevoMap[key] = {
+        modelo: selectedModelo,
+        talla,
+        completos: paresAEnviar,
+        faltIzq: 0,
+        faltDer: 0,
+        segunda: 0,
+        mermas: 0,
+      };
+    });
+
+    setCapturasMap(nuevoMap);
+    setMensajeExito(`⚡ ¡Corrida completa de ${selectedModelo} para todas las tallas cargada a 1-Clic! Toca "Guardar Entrada".`);
+    setTimeout(() => setMensajeExito(null), 4000);
+  };
+
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
       {/* HEADER PRINCIPAL */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-800">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-100 uppercase">
-            Recepción de Maquila
+            Recepción de Calzado
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 mt-1">
-            Ingreso de pares completos y faltantes por corrida de tallas cerradas.
+            Captura ultra-rápida de lotes recibidos de maquila y control de calidad.
           </p>
         </div>
-        {itemsCapturadosArray.length > 0 && (
-          <div className="flex items-center gap-3 text-sm sm:text-base font-mono bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
-            <span className="text-zinc-400">Total:</span>
-            <span className="font-extrabold text-emerald-400">{totalParesCapturados} pares</span>
-            {totalFaltantesCapturados > 0 && (
-              <span className="text-rose-400 font-bold">({totalFaltantesCapturados} faltantes)</span>
-            )}
-          </div>
-        )}
+
+        {/* BOTÓN AUTOMÁTICO DE 1-CLIC */}
+        <button
+          type="button"
+          onClick={handleRecibirTodoCompleto}
+          className="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-2xl text-sm sm:text-base font-extrabold uppercase shadow-lg border-2 border-emerald-300 transition-all flex items-center justify-center gap-2 transform hover:scale-[1.02]"
+        >
+          <span>⚡ Recibir Todo Completo (1-Clic)</span>
+        </button>
       </div>
 
+      {itemsCapturadosArray.length > 0 && (
+        <div className="flex items-center gap-3 text-sm sm:text-base font-mono bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
+          <span className="text-zinc-400">Total:</span>
+          <span className="font-extrabold text-emerald-400">{totalParesCapturados} pares</span>
+          {totalFaltantesCapturados > 0 && (
+            <span className="text-rose-400 font-bold">({totalFaltantesCapturados} faltantes)</span>
+          )}
+        </div>
+      )}
+
       {/* ALERTAS */}
+
       {mensajeExito && (
         <div className="bg-emerald-950/60 border border-emerald-700/80 text-emerald-200 rounded-2xl p-4 text-center font-semibold text-sm sm:text-base shadow-md flex items-center justify-center gap-3">
           <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -436,7 +511,69 @@ export default function RecepcionPage() {
               </div>
             </div>
           </div>
+
+          {/* SECCIÓN DE CONTROL DE CALIDAD (QC) Y PENALIZACIÓN */}
+          <div className="pt-4 border-t border-zinc-800 space-y-4">
+            <span className="text-xs sm:text-sm font-mono font-bold text-zinc-300 uppercase tracking-wider block">
+              Control de Calidad (QC) & Mermas Imputables:
+            </span>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-1">
+                <span className="text-xs font-mono font-bold text-amber-400 block">Pares de 2da</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={itemActual.segunda || ''}
+                  onChange={(e) => handleInputChange('segunda', e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg text-center font-mono font-bold text-base text-zinc-100 py-1 focus:outline-none"
+                />
+              </div>
+
+              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-1">
+                <span className="text-xs font-mono font-bold text-rose-400 block">Mermas Totales</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={itemActual.mermas || ''}
+                  onChange={(e) => handleInputChange('mermas', e.target.value)}
+                  placeholder="0"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg text-center font-mono font-bold text-base text-rose-300 py-1 focus:outline-none"
+                />
+              </div>
+
+              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-1">
+                <span className="text-xs font-mono font-bold text-zinc-400 block">Tipo de Defecto (QC)</span>
+                <select
+                  value={itemActual.tipoDefecto || 'Otro Defecto'}
+                  onChange={(e) => handleSetTipoDefecto(e.target.value as TipoDefectoQC)}
+                  className="w-full bg-zinc-900 border border-zinc-700 text-zinc-100 rounded-lg py-1 px-2 text-xs font-semibold focus:outline-none"
+                >
+                  <option value="Piel Manchada/Abierta">Piel Manchada/Abierta</option>
+                  <option value="Costura Desalineada">Costura Desalineada</option>
+                  <option value="Planta/Tacón Despegado">Planta/Tacón Despegado</option>
+                  <option value="Merma Irreparable">Merma Irreparable</option>
+                  <option value="Otro Defecto">Otro Defecto</option>
+                </select>
+              </div>
+
+              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 space-y-1">
+                <span className="text-xs font-mono font-bold text-rose-400 block">Cargo Maquilero ($ MXN)</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  value={itemActual.cargoMXN || ''}
+                  onChange={(e) => handleInputChange('cargoMXN', e.target.value)}
+                  placeholder="$0.00"
+                  className="w-full bg-zinc-900 border border-rose-800 text-center font-mono font-extrabold text-base text-rose-400 py-1 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
         </div>
+
 
         {/* NOTA DE INCIDENCIA SI HAY FALTANTES */}
         {tieneFaltantesTotales && (

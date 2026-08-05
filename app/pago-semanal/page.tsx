@@ -249,13 +249,21 @@ export default function PagoSemanalPage() {
                     {resumen.maquilero.nombre}
                   </span>
                 </div>
-                <div className="flex items-center gap-6 text-right">
+                <div className="flex items-center gap-4 sm:gap-6 text-right flex-wrap justify-end">
                   <div>
                     <span className="text-xs text-zinc-400 uppercase font-mono font-bold block">Pares Entregados</span>
-                    <span className="font-extrabold font-mono text-emerald-400 print:text-black text-base sm:text-lg">
+                    <span className="font-extrabold font-mono text-emerald-400 print:text-black text-base">
                       {resumen.total_pares_completos} pares
                     </span>
                   </div>
+                  {Boolean(resumen.total_cargos_qc_mxn && resumen.total_cargos_qc_mxn > 0) && (
+                    <div>
+                      <span className="text-xs text-rose-400 uppercase font-mono font-bold block">Cargos QC / Merma</span>
+                      <span className="font-extrabold font-mono text-rose-400 text-base">
+                        -{formatMXN(resumen.total_cargos_qc_mxn!)}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <span className="text-xs text-zinc-400 uppercase font-mono font-bold block">Total Liquidado</span>
                     <span className="font-extrabold font-mono text-emerald-400 print:text-black text-base sm:text-lg">
@@ -264,6 +272,7 @@ export default function PagoSemanalPage() {
                   </div>
                 </div>
               </div>
+
 
               {/* DETALLE TABLA DE RECEPCIONES */}
               <div className="overflow-x-auto">
