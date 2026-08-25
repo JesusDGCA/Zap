@@ -36,13 +36,29 @@ export interface HistorialMovimientoLote {
   notas?: string;
 }
 
-export type UnidadMedidaInsumo = 'pares' | 'piezas' | 'litros' | 'metros' | 'unidades';
+export type UnidadMedidaInsumo =
+  | 'pares'
+  | 'piezas'
+  | 'litros'
+  | 'metros'
+  | 'unidades'
+  | 'DCM'
+  | 'CM'
+  | 'MT'
+  | 'MILLAR'
+  | 'PAR'
+  | 'PIEZA'
+  | string;
 
 export interface ItemRecetaBOM {
   id: string;
+  pieza?: string; // Ej. "CHINELA, TALON", "FORRO AVIOS", "MOÑO", "TIRA P/ANILLO", "PLANTA", "SUELA", "TACON", "CAJA"
   material_nombre: string;
-  cantidad_por_par: number; // Ej. 1.0 (pares), 0.05 (litros), 0.20 (metros)
-  unidad_medida: UnidadMedidaInsumo;
+  cantidad_por_par: number; // Consumo por par (CxP) ej. 6.89, 4.32, 20.00, 1.00
+  unidad_medida: UnidadMedidaInsumo; // Unidad por par (ej. "DCM", "CM", "PIEZA", "PAR")
+  consumo_total_unidad?: string; // Unidad de consumo total / compra (ej. "MT", "MILLAR", "PIEZA", "PAR")
+  factor_conversion?: number; // Factor opcional para convertir unidad individual a total (ej. DCM/100 o CM/100)
+  seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general';
 }
 
 export interface FichaTecnicaModeloBOM {
@@ -53,17 +69,41 @@ export interface FichaTecnicaModeloBOM {
 }
 
 export interface ResultadoExplosionMateriales {
+  pieza?: string;
   material_nombre: string;
-  unidad_medida: UnidadMedidaInsumo;
+  consumo_por_par: number;
+  unidad_medida_par: string;
   cantidad_requerida_total: number;
+  unidad_medida_total: string;
   stock_actual: number;
   diferencia_stock: number; // stock_actual - requerida
   suficiente: boolean;
+  seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general';
+}
+
+export interface DetalleTallaCorrida {
+  talla: string | number;
+  pares: number;
+}
+
+export interface TarjetaProduccionData {
+  lote: string;
+  programa: string;
+  fecha_entrega: string;
+  horma: string;
+  linea: string;
+  moldura: string;
+  cliente: string;
+  estilo: string;
+  descripcion_estilo: string;
+  renglon: string;
+  desglose_tallas: DetalleTallaCorrida[];
+  total_pares: number;
+  materiales: ResultadoExplosionMateriales[];
+  troquel_especificacion?: string;
 }
 
 export interface Maquilero {
-
-
   id: string;
   nombre: string;
   tarifa_por_par: number; // Ej. 14.50 MXN
@@ -71,15 +111,23 @@ export interface Maquilero {
 
 export interface ModeloCalzado {
   id: string;
-  nombre: string;  // Ej. "Frozen", "Carol", "Carmin"
-  estilo?: string; // Ej. "Sandalia Plataforma", "Zapatilla Stiletto"
+  nombre: string;  // Ej. "HELLEN - 3596", "Frozen", "Carol"
+  horma?: string;  // Ej. "HELLEN"
+  linea?: string;  // Ej. "HELLEN - 3596"
+  moldura?: string; // Ej. "3596"
+  estilo?: string; // Ej. "3596-02 CHAROL NEGRO ADRIANA BOCANEGRA (NEGRO)"
+  descripcion_estilo?: string; // Ej. "ZAPATILLA DESTALONADA CON MOÑO"
+  cliente_default?: string; // Ej. "ADRIANA BOCANEGRA"
+  troquel_especificacion?: string; // Ej. "NOM 20 / TROQUEL: SINTETICO / SINTETICO PLATA / BOCASSAO PLATA"
 }
 
 export interface InventarioCrudo {
   id: string;
-  tipo_material: string; // ej. "Planta Modelo Frozen", "Tacón 7cm", "Rollo Piel Sintética"
-  talla: number;         // ej. 22.0, 23.0, 24.0, 25.0
-  cantidad_total: number; // Pares o unidades crudas en almacén
+  tipo_material: string; // ej. "CHAROL 0.8 HQ NEGRO VIRGEN", "HELLEN ESQ. 3596", "CAJA BOCASSAO..."
+  talla: number;         // ej. 0 si es general, o 22, 23, 24, 25, 26 si es por talla (plantas, suelas)
+  cantidad_total: number; // Cantidad en almacén
+  unidad_medida?: string; // MT, DCM, PAR, PIEZA, MILLAR, KG, LITROS
+  seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general';
 }
 
 export interface OrdenSalida {

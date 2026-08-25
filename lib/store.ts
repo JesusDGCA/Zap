@@ -24,11 +24,247 @@ import {
   ResultadoExplosionMateriales,
 } from '@/types/database';
 
-export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [];
-export const INITIAL_LOTES_PRODUCCION: LoteProduccion[] = [];
-export const INITIAL_MAQUILEROS: Maquilero[] = [];
-export const INITIAL_MODELOS: ModeloCalzado[] = [];
-export const INITIAL_INVENTARIO_CRUDO: InventarioCrudo[] = [];
+export const INITIAL_MODELOS: ModeloCalzado[] = [
+  {
+    id: 'mod-hellen-3596',
+    nombre: 'HELLEN - 3596',
+    horma: 'HELLEN',
+    linea: 'HELLEN - 3596',
+    moldura: '3596',
+    estilo: '3596-02 CHAROL NEGRO ADRIANA BOCANEGRA (NEGRO)',
+    descripcion_estilo: 'ZAPATILLA DESTALONADA CON MOÑO',
+    cliente_default: 'ADRIANA BOCANEGRA',
+    troquel_especificacion: 'NOM 20 / TROQUEL: SINTETICO / SINTETICO PLATA / BOCASSAO PLATA',
+  },
+  {
+    id: 'mod-frozen',
+    nombre: 'Frozen',
+    horma: 'FROZEN',
+    linea: 'FROZEN - 2026',
+    moldura: '2026',
+    estilo: 'SANDALIA PLATAFORMA FROZEN',
+    descripcion_estilo: 'SANDALIA PLATAFORMA TACÓN 9CM',
+    cliente_default: 'CLASBEN',
+    troquel_especificacion: 'NOM 20 / TROQUEL: SINTETICO / ORO',
+  },
+  {
+    id: 'mod-carol',
+    nombre: 'Carol',
+    horma: 'CAROL',
+    linea: 'CAROL - CONFORT',
+    moldura: '1420',
+    estilo: 'MOCASÍN CONFORT DAMA',
+    descripcion_estilo: 'MOCASÍN SUAVE CON HERRAJE',
+    cliente_default: 'CKLASS',
+    troquel_especificacion: 'NOM 20 / TROQUEL: PIEL VACUNO / NEGRO',
+  },
+];
+
+export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [
+  {
+    id: 'bom-hellen-3596',
+    modelo_nombre: 'HELLEN - 3596',
+    notas: 'Receta estándar Zapatilla Destalonada con Moño 48 pares / Programa 260228',
+    receta: [
+      {
+        id: 'r-1',
+        pieza: 'CHINELA, TALON',
+        material_nombre: 'CHAROL 0.8 HQ NEGRO BOMBOM',
+        cantidad_por_par: 6.89,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 135,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-2',
+        pieza: 'FORRO AVIOS',
+        material_nombre: 'CHAROL 0.8 HQ NEGRO VIRGEN',
+        cantidad_por_par: 4.32,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 135,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-3',
+        pieza: 'MOÑO',
+        material_nombre: 'CHAROL 0.8 HQ NEGRO VIRGEN',
+        cantidad_por_par: 5.40,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 135,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-4',
+        pieza: 'MAT. ANILLO',
+        material_nombre: 'CHAROL 0.8 HQ NEGRO VIRGEN',
+        cantidad_por_par: 0.54,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 135,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-5',
+        pieza: 'TIRA P/ANILLO',
+        material_nombre: 'TIRA DOBLELLADA A TOPE 9MM CHAROL NEGRO',
+        cantidad_por_par: 20.00,
+        unidad_medida: 'CM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 0.01,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-6',
+        pieza: 'BASE MOÑO',
+        material_nombre: 'DURAZNO NEGRO VIRGEN',
+        cantidad_por_par: 0.14,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 135,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-7',
+        pieza: 'FORRO, PLANTILLA',
+        material_nombre: 'FORRO BARCELONA NEGRO',
+        cantidad_por_par: 12.00,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 100,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-8',
+        pieza: 'ELASTICO',
+        material_nombre: 'ELASTICO FORRADO 6MM KENYA NEGRO',
+        cantidad_por_par: 1.69,
+        unidad_medida: 'CM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 0.01,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-9',
+        pieza: 'CASCO',
+        material_nombre: 'ASTARX BR',
+        cantidad_por_par: 0.60,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 150,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-10',
+        pieza: 'HUESITO',
+        material_nombre: 'LATEX 3MM REGULAR NATURAL SOFT (AIRFIT NAT REGULAR)',
+        cantidad_por_par: 0.60,
+        unidad_medida: 'DCM',
+        consumo_total_unidad: 'MT',
+        factor_conversion: 1 / 150,
+        seccion: 'corte',
+      },
+      {
+        id: 'r-11',
+        pieza: 'PAPEL ENCAJILLADO',
+        material_nombre: 'CHINA BLANCO 30X70',
+        cantidad_por_par: 1.00,
+        unidad_medida: 'PIEZA',
+        consumo_total_unidad: 'MILLAR',
+        factor_conversion: 0.001,
+        seccion: 'empaque',
+      },
+      {
+        id: 'r-12',
+        pieza: 'CAJA',
+        material_nombre: 'CAJA BOCASSAO 31*16.5*10.5',
+        cantidad_por_par: 1.00,
+        unidad_medida: 'PIEZA',
+        consumo_total_unidad: 'PIEZA',
+        factor_conversion: 1,
+        seccion: 'empaque',
+      },
+      {
+        id: 'r-13',
+        pieza: 'PLANTA',
+        material_nombre: 'HELLEN ESQ. 3596',
+        cantidad_por_par: 1.00,
+        unidad_medida: 'PAR',
+        consumo_total_unidad: 'PAR',
+        factor_conversion: 1,
+        seccion: 'suela_planta_tacon',
+      },
+      {
+        id: 'r-14',
+        pieza: 'SUELA',
+        material_nombre: 'HELLEN NEGRO C/NEGRO',
+        cantidad_por_par: 1.00,
+        unidad_medida: 'PAR',
+        consumo_total_unidad: 'PAR',
+        factor_conversion: 1,
+        seccion: 'suela_planta_tacon',
+      },
+      {
+        id: 'r-15',
+        pieza: 'TACON',
+        material_nombre: 'LULU CON FIRME NEGRO',
+        cantidad_por_par: 1.00,
+        unidad_medida: 'PAR',
+        consumo_total_unidad: 'PAR',
+        factor_conversion: 1,
+        seccion: 'suela_planta_tacon',
+      },
+    ],
+  },
+];
+
+export const INITIAL_INVENTARIO_CRUDO: InventarioCrudo[] = [
+  { id: 'inv-1', tipo_material: 'CHAROL 0.8 HQ NEGRO BOMBOM', talla: 0, cantidad_total: 50, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-2', tipo_material: 'CHAROL 0.8 HQ NEGRO VIRGEN', talla: 0, cantidad_total: 80, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-3', tipo_material: 'TIRA DOBLELLADA A TOPE 9MM CHAROL NEGRO', talla: 0, cantidad_total: 200, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-4', tipo_material: 'DURAZNO NEGRO VIRGEN', talla: 0, cantidad_total: 30, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-5', tipo_material: 'FORRO BARCELONA NEGRO', talla: 0, cantidad_total: 100, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-6', tipo_material: 'ELASTICO FORRADO 6MM KENYA NEGRO', talla: 0, cantidad_total: 50, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-7', tipo_material: 'ASTARX BR', talla: 0, cantidad_total: 40, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-8', tipo_material: 'LATEX 3MM REGULAR NATURAL SOFT', talla: 0, cantidad_total: 40, unidad_medida: 'MT', seccion: 'corte' },
+  { id: 'inv-9', tipo_material: 'CHINA BLANCO 30X70', talla: 0, cantidad_total: 2, unidad_medida: 'MILLAR', seccion: 'empaque' },
+  { id: 'inv-10', tipo_material: 'CAJA BOCASSAO 31*16.5*10.5', talla: 0, cantidad_total: 500, unidad_medida: 'PIEZA', seccion: 'empaque' },
+  { id: 'inv-11', tipo_material: 'HELLEN ESQ. 3596', talla: 23, cantidad_total: 50, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+  { id: 'inv-12', tipo_material: 'HELLEN ESQ. 3596', talla: 24, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+  { id: 'inv-13', tipo_material: 'HELLEN ESQ. 3596', talla: 25, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+  { id: 'inv-14', tipo_material: 'HELLEN NEGRO C/NEGRO', talla: 23, cantidad_total: 50, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+  { id: 'inv-15', tipo_material: 'HELLEN NEGRO C/NEGRO', talla: 24, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+  { id: 'inv-16', tipo_material: 'HELLEN NEGRO C/NEGRO', talla: 25, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+  { id: 'inv-17', tipo_material: 'LULU CON FIRME NEGRO', talla: 0, cantidad_total: 300, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+];
+
+export const INITIAL_LOTES_PRODUCCION: LoteProduccion[] = [
+  {
+    id: 'lote-1568',
+    folio: 'LOT-1568',
+    modelo: 'HELLEN - 3596',
+    total_pares: 48,
+    etapa_actual: 'Corte',
+    fecha_inicio: '2026-07-29',
+    desglose_tallas: [
+      { talla: 23, pares: 4 },
+      { talla: 23.5, pares: 4 },
+      { talla: 24, pares: 8 },
+      { talla: 24.5, pares: 8 },
+      { talla: 25, pares: 8 },
+      { talla: 25.5, pares: 8 },
+      { talla: 26, pares: 8 },
+    ],
+    notas: 'Programa 260228 - Zapatilla Destalonada con Moño - Cliente Adriana Bocanegra',
+  },
+];
+
+export const INITIAL_MAQUILEROS: Maquilero[] = [
+  { id: 'mq-1', nombre: 'Taller Don Beto - Forrado & Montado', tarifa_por_par: 16.5 },
+  { id: 'mq-2', nombre: 'Pespunte Doña Carmen', tarifa_por_par: 14.0 },
+];
 export const INITIAL_ORDENES_SALIDA: OrdenSalida[] = [];
 export const INITIAL_ORDENES_SALIDA_DETALLE: OrdenSalidaDetalle[] = [];
 export const INITIAL_RECEPCIONES: Recepcion[] = [];
@@ -53,12 +289,21 @@ const STORAGE_KEYS = {
 
 function checkAndAutoPurgeOnce(): void {
   if (typeof window === 'undefined') return;
-  if (localStorage.getItem('calzado_pwa_system_wiped_clean_v1') !== 'true') {
-    Object.values(STORAGE_KEYS).forEach((key) => {
-      localStorage.removeItem(key);
-      localStorage.setItem(key, JSON.stringify([]));
-    });
-    localStorage.setItem('calzado_pwa_system_wiped_clean_v1', 'true');
+  // Inicializar con datos si está vacío
+  if (localStorage.getItem('calzado_pwa_system_v2_initialized') !== 'true') {
+    if (!localStorage.getItem(STORAGE_KEYS.MODELOS) || JSON.parse(localStorage.getItem(STORAGE_KEYS.MODELOS) || '[]').length === 0) {
+      localStorage.setItem(STORAGE_KEYS.MODELOS, JSON.stringify(INITIAL_MODELOS));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.FICHAS_TECNICAS_BOM) || JSON.parse(localStorage.getItem(STORAGE_KEYS.FICHAS_TECNICAS_BOM) || '[]').length === 0) {
+      localStorage.setItem(STORAGE_KEYS.FICHAS_TECNICAS_BOM, JSON.stringify(INITIAL_FICHAS_TECNICAS_BOM));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.INVENTARIO) || JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTARIO) || '[]').length === 0) {
+      localStorage.setItem(STORAGE_KEYS.INVENTARIO, JSON.stringify(INITIAL_INVENTARIO_CRUDO));
+    }
+    if (!localStorage.getItem(STORAGE_KEYS.LOTES_PRODUCCION) || JSON.parse(localStorage.getItem(STORAGE_KEYS.LOTES_PRODUCCION) || '[]').length === 0) {
+      localStorage.setItem(STORAGE_KEYS.LOTES_PRODUCCION, JSON.stringify(INITIAL_LOTES_PRODUCCION));
+    }
+    localStorage.setItem('calzado_pwa_system_v2_initialized', 'true');
   }
 }
 
@@ -67,7 +312,12 @@ function getStoredData<T>(key: string, fallback: T): T {
   checkAndAutoPurgeOnce();
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    if (!item) return fallback;
+    const parsed = JSON.parse(item);
+    if (Array.isArray(fallback) && Array.isArray(parsed) && parsed.length === 0) {
+      return fallback;
+    }
+    return parsed;
   } catch (e) {
     console.error(`Error leyendo ${key} de localStorage`, e);
     return fallback;
@@ -83,7 +333,6 @@ function setStoredData<T>(key: string, value: T): void {
   }
 }
 
-
 export class ProductionStore {
   // RECETARIO Y FICHAS TÉCNICAS (BOM & EXPLOSIÓN DE MATERIALES)
   static getFichasTecnicasBOM(): FichaTecnicaModeloBOM[] {
@@ -92,7 +341,11 @@ export class ProductionStore {
 
   static getFichaTecnicaPorModelo(modeloNombre: string): FichaTecnicaModeloBOM | undefined {
     const list = this.getFichasTecnicasBOM();
-    return list.find((f) => f.modelo_nombre.toLowerCase() === modeloNombre.toLowerCase());
+    const found = list.find((f) => f.modelo_nombre.toLowerCase() === modeloNombre.toLowerCase());
+    if (found) return found;
+    return INITIAL_FICHAS_TECNICAS_BOM.find(
+      (f) => f.modelo_nombre.toLowerCase() === modeloNombre.toLowerCase()
+    );
   }
 
   static guardarFichaTecnicaBOM(
@@ -130,7 +383,22 @@ export class ProductionStore {
     const inventario = this.getInventarioCrudo();
 
     return ficha.receta.map((item) => {
-      const cantidadRequeridaTotal = Number((item.cantidad_por_par * totalPares).toFixed(2));
+      let cantidadRequeridaTotal: number;
+      const unidadPar = (item.unidad_medida || 'pares').toUpperCase();
+      const unidadTotal = (item.consumo_total_unidad || item.unidad_medida || 'pares').toUpperCase();
+
+      if (item.factor_conversion !== undefined && item.factor_conversion > 0) {
+        cantidadRequeridaTotal = Number((item.cantidad_por_par * totalPares * item.factor_conversion).toFixed(2));
+      } else if (unidadPar === 'DCM' && unidadTotal === 'MT') {
+        // En calzado ~135 dm² = 1 metro lineal de sintético/piel
+        cantidadRequeridaTotal = Number(((item.cantidad_por_par * totalPares) / 135).toFixed(2));
+      } else if (unidadPar === 'CM' && unidadTotal === 'MT') {
+        cantidadRequeridaTotal = Number(((item.cantidad_por_par * totalPares) / 100).toFixed(2));
+      } else if (unidadPar === 'PIEZA' && unidadTotal === 'MILLAR') {
+        cantidadRequeridaTotal = Number(((item.cantidad_por_par * totalPares) / 1000).toFixed(2));
+      } else {
+        cantidadRequeridaTotal = Number((item.cantidad_por_par * totalPares).toFixed(2));
+      }
 
       // Buscar coincidencia en inventario por nombre de material
       const invMatches = inventario.filter((inv) =>
@@ -139,15 +407,19 @@ export class ProductionStore {
 
       const stockActual = invMatches.reduce((sum, inv) => sum + inv.cantidad_total, 0);
       const diferenciaStock = stockActual - cantidadRequeridaTotal;
-      const suficiente = diferenciaStock >= 0;
+      const suficiente = stockActual >= cantidadRequeridaTotal || stockActual > 0;
 
       return {
+        pieza: item.pieza || 'GENERAL',
         material_nombre: item.material_nombre,
-        unidad_medida: item.unidad_medida,
+        consumo_por_par: item.cantidad_por_par,
+        unidad_medida_par: item.unidad_medida,
         cantidad_requerida_total: cantidadRequeridaTotal,
+        unidad_medida_total: item.consumo_total_unidad || item.unidad_medida,
         stock_actual: stockActual,
         diferencia_stock: diferenciaStock,
         suficiente,
+        seccion: item.seccion || 'corte',
       };
     });
   }
@@ -371,16 +643,59 @@ export class ProductionStore {
     return getStoredData(STORAGE_KEYS.MODELOS, INITIAL_MODELOS);
   }
 
-  static crearModelo(nombre: string, estilo?: string): ModeloCalzado {
+  static crearModelo(
+    input:
+      | string
+      | {
+          nombre: string;
+          horma?: string;
+          linea?: string;
+          moldura?: string;
+          estilo?: string;
+          descripcion_estilo?: string;
+          cliente_default?: string;
+          troquel_especificacion?: string;
+        },
+    estiloParam?: string
+  ): ModeloCalzado {
     const list = this.getModelos();
-    const nuevo: ModeloCalzado = {
-      id: `mod-${Date.now()}`,
-      nombre: nombre.trim(),
-      estilo: estilo ? estilo.trim() : undefined,
-    };
+    let nuevo: ModeloCalzado;
+    if (typeof input === 'string') {
+      nuevo = {
+        id: `mod-${Date.now()}`,
+        nombre: input.trim(),
+        estilo: estiloParam ? estiloParam.trim() : undefined,
+      };
+    } else {
+      nuevo = {
+        id: `mod-${Date.now()}`,
+        nombre: input.nombre.trim(),
+        horma: input.horma ? input.horma.trim() : undefined,
+        linea: input.linea ? input.linea.trim() : undefined,
+        moldura: input.moldura ? input.moldura.trim() : undefined,
+        estilo: input.estilo ? input.estilo.trim() : undefined,
+        descripcion_estilo: input.descripcion_estilo ? input.descripcion_estilo.trim() : undefined,
+        cliente_default: input.cliente_default ? input.cliente_default.trim() : undefined,
+        troquel_especificacion: input.troquel_especificacion ? input.troquel_especificacion.trim() : undefined,
+      };
+    }
     list.unshift(nuevo);
     setStoredData(STORAGE_KEYS.MODELOS, list);
     return nuevo;
+  }
+
+  static editarModelo(id: string, update: Partial<ModeloCalzado>): ModeloCalzado | null {
+    const list = this.getModelos();
+    const index = list.findIndex((m) => m.id === id);
+    if (index === -1) return null;
+    list[index] = { ...list[index], ...update };
+    setStoredData(STORAGE_KEYS.MODELOS, list);
+    return list[index];
+  }
+
+  static eliminarModelo(id: string): void {
+    const list = this.getModelos().filter((m) => m.id !== id);
+    setStoredData(STORAGE_KEYS.MODELOS, list);
   }
 
   // CATÁLOGO DE INVENTARIO CRUDO / INSUMOS
@@ -388,17 +703,39 @@ export class ProductionStore {
     return getStoredData(STORAGE_KEYS.INVENTARIO, INITIAL_INVENTARIO_CRUDO);
   }
 
-  static agregarInsumoInventario(tipo_material: string, talla: number, cantidad_total: number): InventarioCrudo {
+  static agregarInsumoInventario(
+    tipo_material: string,
+    talla: number,
+    cantidad_total: number,
+    unidad_medida?: string,
+    seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general'
+  ): InventarioCrudo {
     const list = this.getInventarioCrudo();
     const nuevo: InventarioCrudo = {
       id: `inv-${Date.now()}`,
       tipo_material: tipo_material.trim(),
       talla: Math.max(0, talla),
       cantidad_total: Math.max(0, cantidad_total),
+      unidad_medida: unidad_medida || 'unidades',
+      seccion: seccion || 'general',
     };
     list.unshift(nuevo);
     setStoredData(STORAGE_KEYS.INVENTARIO, list);
     return nuevo;
+  }
+
+  static actualizarStockInsumo(id: string, deltaCantidad: number): InventarioCrudo | null {
+    const list = this.getInventarioCrudo();
+    const index = list.findIndex((i) => i.id === id);
+    if (index === -1) return null;
+    list[index].cantidad_total = Math.max(0, Number((list[index].cantidad_total + deltaCantidad).toFixed(2)));
+    setStoredData(STORAGE_KEYS.INVENTARIO, list);
+    return list[index];
+  }
+
+  static eliminarInsumoInventario(id: string): void {
+    const list = this.getInventarioCrudo().filter((i) => i.id !== id);
+    setStoredData(STORAGE_KEYS.INVENTARIO, list);
   }
 
   static getOrdenesSalida(): OrdenSalida[] {

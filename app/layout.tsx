@@ -3,13 +3,13 @@ import './globals.css';
 import SidebarLayout from '@/components/SidebarLayout';
 
 export const metadata: Metadata = {
-  title: 'Control de Producción & Maquila | Fábrica de Calzado',
-  description: 'Sistema PWA para control de inventario crudo, recepción de maquila y liquidación de pago semanal a destajo.',
+  title: 'Control de Producción & Almacén | Fábrica de Calzado',
+  description: 'Sistema para control de calzado en taller, materiales, recepción y pago de raya semanal.',
   manifest: '/manifest.json',
 };
 
 export const viewport: Viewport = {
-  themeColor: '#09090b',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -22,11 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="h-full bg-zinc-950 text-zinc-100 antialiased">
-      <body className="h-full bg-zinc-950 text-zinc-100 font-sans selection:bg-zinc-800 selection:text-zinc-100">
+    <html lang="es" className="h-full dark">
+      <body className="h-full font-sans antialiased">
         <SidebarLayout>{children}</SidebarLayout>
       </body>
     </html>
   );
 }
-

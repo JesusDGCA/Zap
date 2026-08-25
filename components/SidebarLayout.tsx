@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
+import { ThemeProvider, useTheme } from './ThemeProvider';
 
-export default function SidebarLayout({ children }: { children: React.ReactNode }) {
+function SidebarLayoutInner({ children }: { children: React.ReactNode }) {
+  const { theme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   useEffect(() => {
@@ -17,7 +19,6 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
     updateCollapseState();
 
-    // Escuchar cambios de localStorage en la ventana
     window.addEventListener('storage', updateCollapseState);
     const interval = setInterval(updateCollapseState, 300);
 
@@ -28,7 +29,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col md:flex-row font-sans">
+    <div className={`${theme} min-h-screen bg-slate-100 dark:bg-black text-slate-900 dark:text-zinc-100 flex flex-col md:flex-row font-sans transition-colors duration-200`}>
       <Sidebar />
       <div
         className={`flex-1 flex flex-col min-h-screen transition-all duration-200 pb-20 md:pb-8 ${
@@ -41,6 +42,12 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       </div>
     </div>
   );
+}
 
-
+export default function SidebarLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider>
+      <SidebarLayoutInner>{children}</SidebarLayoutInner>
+    </ThemeProvider>
+  );
 }

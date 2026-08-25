@@ -12,6 +12,8 @@ import {
   Search,
   ChevronRight,
   Tag,
+  Zap,
+  FileText,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
 import {
@@ -23,12 +25,12 @@ import {
 } from '@/types/database';
 
 const ETAPAS: { key: EtapaProduccion; label: string; desc: string; color: string }[] = [
-  { key: 'Corte', label: '1. Corte', desc: 'Piel y sintético habilitado', color: 'border-blue-500/80 text-blue-400' },
-  { key: 'Pespunte', label: '2. Pespunte', desc: 'Costura de corte/chinela', color: 'border-purple-500/80 text-purple-400' },
-  { key: 'Forrado', label: '3. Forrado', desc: 'Plantas, tacón y plataforma', color: 'border-amber-500/80 text-amber-400' },
-  { key: 'Montado', label: '4. Montado', desc: 'Montado sobre horma y suela', color: 'border-orange-500/80 text-orange-400' },
-  { key: 'Adornado', label: '5. Adornado', desc: 'Limpieza, empaque y ajuste', color: 'border-cyan-500/80 text-cyan-400' },
-  { key: 'Producto Terminado', label: '6. Terminado', desc: 'Listo para despacho', color: 'border-emerald-500/80 text-emerald-400' },
+  { key: 'Corte', label: '1. Corte', desc: 'Piel y sintetico habilitado', color: 'border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400' },
+  { key: 'Pespunte', label: '2. Pespunte', desc: 'Costura de corte y chinela', color: 'border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400' },
+  { key: 'Forrado', label: '3. Forrado', desc: 'Plantas, tacon y plataforma', color: 'border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400' },
+  { key: 'Montado', label: '4. Montado', desc: 'Montado sobre horma y suela', color: 'border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400' },
+  { key: 'Adornado', label: '5. Adornado', desc: 'Limpieza, empaque y ajuste', color: 'border-blue-600 dark:border-blue-500 text-blue-700 dark:text-blue-400' },
+  { key: 'Producto Terminado', label: '6. Terminado', desc: 'Listo en almacen de producto', color: 'border-emerald-600 dark:border-emerald-500 text-emerald-700 dark:text-emerald-400' },
 ];
 
 const PROXIMA_ETAPA_MAP: { [key in EtapaProduccion]?: EtapaProduccion } = {
@@ -47,14 +49,15 @@ export default function ProcesosPage() {
 
   // Modal para crear nuevo lote
   const [modalNuevoLote, setModalNuevoLote] = useState<boolean>(false);
-  const [nuevoModelo, setNuevoModelo] = useState<string>('Frozen');
+  const [nuevoModelo, setNuevoModelo] = useState<string>('HELLEN - 3596');
   const [nuevoNotas, setNuevoNotas] = useState<string>('');
   const [tallasLote, setTallasLote] = useState<{ [talla: number]: number }>({
-    22: 30,
-    23: 30,
-    24: 40,
-    25: 35,
-    26: 15,
+    22: 0,
+    23: 10,
+    24: 20,
+    25: 20,
+    26: 10,
+    27: 0,
   });
 
   // Modal para avanzar etapa de lote
@@ -105,7 +108,7 @@ export default function ProcesosPage() {
       notas: nuevoNotas,
     });
 
-    setMensajeExito(`⚡ ¡Lote ${nuevo.folio} (${nuevo.total_pares} pares) ingresado a Corte! Insumos descontados automáticamente del almacén crudo.`);
+    setMensajeExito(`Lote ${nuevo.folio} (${nuevo.total_pares} pares) ingresado a Corte correctamente.`);
 
     setModalNuevoLote(false);
     setNuevoNotas('');
@@ -128,16 +131,15 @@ export default function ProcesosPage() {
     ProductionStore.avanzarEtapaLote({
       lote_id: lote.id,
       nueva_etapa: proximaEtapa,
-      notas: `Avanzado a 1-Clic a ${proximaEtapa}`,
+      notas: `Avanzado a ${proximaEtapa}`,
     });
 
-    setMensajeExito(`⚡ Lote ${lote.folio} avanzado a ${proximaEtapa} en 1-Clic.`);
+    setMensajeExito(`Lote ${lote.folio} avanzado a ${proximaEtapa}.`);
     cargarDatos();
     setTimeout(() => setMensajeExito(null), 3000);
   };
 
   const handleConfirmarMovimiento = (e: React.FormEvent) => {
-
     e.preventDefault();
     if (!loteMover) return;
 
@@ -148,92 +150,88 @@ export default function ProcesosPage() {
       notas: notasMovimiento,
     });
 
-    setMensajeExito(`Lote ${loteMover.folio} avanzado a la etapa ${etapaDestino}.`);
+    setMensajeExito(`Lote ${loteMover.folio} movido a ${etapaDestino}.`);
     setLoteMover(null);
     cargarDatos();
     setTimeout(() => setMensajeExito(null), 3000);
   };
 
-  // Cálculo de totales de resumen WIP
-  const totalParesWIP = lotes
+  const lotesFiltrados = lotes.filter((l) => {
+    const texto = `${l.folio} ${l.modelo} ${l.maquilero_nombre || ''} ${l.etapa_actual}`.toLowerCase();
+    return texto.includes(busqueda.toLowerCase());
+  });
+
+  const totalParesEnPlanta = lotes
     .filter((l) => l.etapa_actual !== 'Producto Terminado')
     .reduce((sum, l) => sum + l.total_pares, 0);
 
-  const totalLotesWIP = lotes.filter((l) => l.etapa_actual !== 'Producto Terminado').length;
-
-  const lotesFiltrados = lotes.filter((l) => {
-    const q = busqueda.toLowerCase().trim();
-    if (!q) return true;
-    return (
-      l.folio.toLowerCase().includes(q) ||
-      l.modelo.toLowerCase().includes(q) ||
-      (l.maquilero_nombre && l.maquilero_nombre.toLowerCase().includes(q))
-    );
-  });
-
   return (
-    <div className="space-y-6 w-full max-w-[1600px] mx-auto">
-      {/* HEADER PRINCIPAL MINIMALISTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-800">
+    <div className="space-y-6 w-full max-w-[1550px] mx-auto">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200 dark:border-zinc-800">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-100 uppercase">
-            Control Multietapa de Procesos (WIP)
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white uppercase flex items-center gap-2">
+            <Layers className="w-7 h-7 text-blue-700 dark:text-blue-500" />
+            <span>3. Zapatos en Fabricacion</span>
           </h1>
-          <p className="text-sm sm:text-base text-zinc-400 mt-1">
-            Rastreo en tiempo real de lotes por etapa productiva en la fábrica de calzado.
+          <p className="text-sm sm:text-base text-slate-600 dark:text-zinc-400 mt-0.5">
+            Sigue el avance de cada lote desde el corte hasta el producto terminado.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-3 font-mono text-sm bg-zinc-900 px-4 py-2 rounded-xl border border-zinc-800">
-            <span className="text-zinc-400">Pares en Proceso:</span>
-            <span className="font-extrabold text-emerald-400 text-base">{totalParesWIP} pares</span>
-            <span className="text-zinc-500">({totalLotesWIP} lotes)</span>
-          </div>
-
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setModalNuevoLote(true)}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow transition-colors"
+            className="px-4 py-2.5 bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow transition-colors"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Lanzar Lote a Corte</span>
+            <span>Ingresar Nuevo Lote</span>
           </button>
         </div>
       </div>
 
       {mensajeExito && (
-        <div className="bg-emerald-950/60 border border-emerald-700/80 text-emerald-200 rounded-2xl p-4 text-center font-semibold text-sm sm:text-base shadow-md flex items-center justify-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 rounded-2xl p-4 text-center font-semibold text-sm sm:text-base shadow-sm flex items-center justify-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-blue-700 dark:text-blue-400 shrink-0" />
           <span>{mensajeExito}</span>
         </div>
       )}
 
-      {/* BARRA DE BÚSQUEDA */}
-      <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+      {/* BARRA DE FILTRO Y RESUMEN */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="px-3 py-1.5 bg-blue-50 dark:bg-blue-950 rounded-xl border border-blue-200 dark:border-blue-800">
+            <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase block">
+              Zapatos en Fabricacion
+            </span>
+            <span className="text-xl font-extrabold font-mono text-blue-700 dark:text-blue-400">
+              {totalParesEnPlanta} pares
+            </span>
+          </div>
+          <div className="px-3 py-1.5 bg-slate-100 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
+            <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase block">
+              Lotes en Proceso
+            </span>
+            <span className="text-xl font-extrabold font-mono text-slate-900 dark:text-white">
+              {lotes.filter((l) => l.etapa_actual !== 'Producto Terminado').length}
+            </span>
+          </div>
+        </div>
+
+        <div className="w-full sm:w-72 relative">
+          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
           <input
             type="text"
-            placeholder="Buscar lote por folio, modelo o taller..."
+            placeholder="Buscar por lote o modelo..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm focus:outline-none font-medium"
+            className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl pl-9 pr-3 py-2 text-xs focus:border-blue-600 focus:outline-none"
           />
         </div>
-        <div className="text-xs sm:text-sm text-zinc-400 font-mono flex items-center gap-1.5 flex-wrap">
-          <span className="text-zinc-500 font-bold">Flujo:</span>
-          <span>Corte</span> <span className="text-emerald-400">→</span>
-          <span>Pespunte</span> <span className="text-emerald-400">→</span>
-          <span>Forrado</span> <span className="text-emerald-400">→</span>
-          <span>Montado</span> <span className="text-emerald-400">→</span>
-          <span>Adornado</span> <span className="text-emerald-400">→</span>
-          <span className="text-emerald-400 font-bold">Terminado</span>
-        </div>
-
       </div>
 
-      {/* TABLERO KANBAN DE ETAPAS (WIP PIPELINE) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto pb-4">
+      {/* TABLERO KANBAN DE ETAPAS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3.5 overflow-x-auto pb-4">
         {ETAPAS.map((etapa) => {
           const lotesEnEtapa = lotesFiltrados.filter((l) => l.etapa_actual === etapa.key);
           const totalParesEtapa = lotesEnEtapa.reduce((sum, l) => sum + l.total_pares, 0);
@@ -241,87 +239,98 @@ export default function ProcesosPage() {
           return (
             <div
               key={etapa.key}
-              className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-3.5 space-y-3 flex flex-col justify-between min-w-[240px]"
+              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-3.5 space-y-3 flex flex-col justify-between min-w-[240px] shadow-sm"
             >
               {/* ENCABEZADO DE COLUMNA */}
               <div className={`pb-2.5 border-b-2 ${etapa.color}`}>
                 <div className="flex items-center justify-between">
-                  <h3 className="font-extrabold text-sm text-zinc-100 uppercase tracking-tight">
+                  <h3 className="font-extrabold text-sm uppercase tracking-tight">
                     {etapa.label}
                   </h3>
-                  <span className="text-xs font-mono font-bold bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800 text-zinc-300">
+                  <span className="text-xs font-mono font-bold bg-slate-100 dark:bg-zinc-950 px-2 py-0.5 rounded border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300">
                     {lotesEnEtapa.length}
                   </span>
                 </div>
-                <span className="text-[11px] text-zinc-400 block mt-0.5">{etapa.desc}</span>
-                <span className="text-xs font-mono font-bold text-emerald-400 block mt-1">
+                <span className="text-[11px] text-slate-500 dark:text-zinc-400 block mt-0.5">{etapa.desc}</span>
+                <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 block mt-1">
                   {totalParesEtapa} pares
                 </span>
               </div>
 
-              {/* LISTA DE TARJETAS DE LOTES */}
+              {/* LISTA DE LOTES */}
               <div className="space-y-3 flex-1 overflow-y-auto max-h-[550px] pr-1">
                 {lotesEnEtapa.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-zinc-600 italic">
+                  <div className="py-8 text-center text-xs text-slate-400 dark:text-zinc-600 italic">
                     Sin lotes en esta etapa
                   </div>
                 ) : (
                   lotesEnEtapa.map((lote) => (
                     <div
                       key={lote.id}
-                      className="bg-zinc-950 border border-zinc-800 hover:border-zinc-700 rounded-xl p-3 space-y-2 transition-all shadow-sm group"
+                      className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-600 rounded-xl p-3 space-y-2 transition-all shadow-sm group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-extrabold text-emerald-400">
+                        <span className="font-mono text-xs font-extrabold text-blue-700 dark:text-blue-400">
                           {lote.folio}
                         </span>
-                        <span className="text-[10px] text-zinc-500 font-mono">
+                        <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-mono">
                           {lote.fecha_inicio}
                         </span>
                       </div>
 
                       <div>
-                        <h4 className="text-xs sm:text-sm font-bold text-zinc-100">{lote.modelo}</h4>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100">{lote.modelo}</h4>
                         {lote.maquilero_nombre && (
-                          <span className="text-[11px] text-amber-400 font-medium block mt-0.5 truncate">
-                            👤 {lote.maquilero_nombre}
+                          <span className="text-[11px] text-slate-600 dark:text-zinc-400 font-medium block mt-0.5 truncate">
+                            Taller: {lote.maquilero_nombre}
                           </span>
                         )}
                       </div>
 
-                      {/* DESGLOSE DE TALLAS RÁPIDO */}
-                      <div className="flex flex-wrap gap-1 text-[10px] font-mono text-zinc-400 pt-1 border-t border-zinc-800/60">
+                      {/* DESGLOSE DE TALLAS */}
+                      <div className="flex flex-wrap gap-1 text-[10px] font-mono text-slate-600 dark:text-zinc-400 pt-1 border-t border-slate-200 dark:border-zinc-800">
                         {lote.desglose_tallas.map((t) => (
-                          <span key={t.talla} className="bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+                          <span key={t.talla} className="bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-zinc-800">
                             #{t.talla}:{t.pares}
                           </span>
                         ))}
                       </div>
 
-                      <div className="pt-2 flex items-center justify-between gap-1">
-                        <span className="text-xs font-mono font-extrabold text-zinc-200">
-                          {lote.total_pares} p
-                        </span>
+                      <div className="pt-2 flex items-center justify-between gap-1 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-mono font-extrabold text-slate-900 dark:text-zinc-200">
+                            {lote.total_pares} p
+                          </span>
+                          <Link
+                            href={`/explosion-materiales`}
+                            className="px-1.5 py-0.5 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded text-[10px] font-mono flex items-center gap-1 border border-slate-200 dark:border-zinc-700"
+                            title="Ver e Imprimir Tarjeta de Producción"
+                          >
+                            <FileText className="w-3 h-3 text-blue-700 dark:text-blue-400" />
+                            <span>Tarjeta</span>
+                          </Link>
+                        </div>
+
                         {etapa.key !== 'Producto Terminado' && (
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleAvanzarUnToque(lote)}
-                              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-extrabold flex items-center gap-0.5 shadow transition-colors"
-                              title="Avanzar etapa en 1-Clic"
+                              className="px-2 py-1 bg-blue-700 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow transition-colors"
+                              title="Avanzar etapa"
                             >
-                              <span>⚡ Avanzar</span>
+                              <Zap className="w-3 h-3" />
+                              <span>Avanzar</span>
                             </button>
                             <button
                               onClick={() => handleAbrirMoverModal(lote)}
-                              className="p-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-lg text-xs font-bold border border-zinc-700"
-                              title="Asignar taller u opciones"
+                              className="p-1 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-lg text-xs font-bold"
+                              title="Opciones de movimiento"
                             >
-                              <ChevronRight className="w-3.5 h-3.5 text-zinc-300" />
+                              <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         )}
                       </div>
-
                     </div>
                   ))
                 )}
@@ -331,70 +340,22 @@ export default function ProcesosPage() {
         })}
       </div>
 
-      {/* HISTORIAL DE MOVIMIENTOS RECIENTES */}
-      <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 space-y-3">
-        <h2 className="text-sm sm:text-base font-mono font-bold text-zinc-200 uppercase border-b border-zinc-800 pb-2.5">
-          Historial de Movimientos de Producción
-        </h2>
-        {historial.length === 0 ? (
-          <div className="py-6 text-center text-xs text-zinc-500">No hay movimientos registrados.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm text-left">
-              <thead>
-                <tr className="border-b border-zinc-800 text-zinc-400 font-mono text-xs">
-                  <th className="py-2.5 px-3 font-semibold">Fecha</th>
-                  <th className="py-2.5 px-3 font-semibold">Transición de Etapa</th>
-                  <th className="py-2.5 px-3 font-semibold">Maquilero / Taller</th>
-                  <th className="py-2.5 px-3 font-semibold">Notas</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {historial.slice(0, 10).map((h) => (
-                  <tr key={h.id} className="hover:bg-zinc-800/40">
-                    <td className="py-2.5 px-3 font-mono text-zinc-400 text-xs">
-                      {new Date(h.fecha).toLocaleString('es-MX')}
-                    </td>
-                    <td className="py-2.5 px-3 font-bold text-zinc-200">
-                      <span className="text-zinc-400">{h.etapa_origen}</span> <span className="text-emerald-400 font-extrabold">→</span>{' '}
-                      <span className="text-emerald-400">{h.etapa_destino}</span>
-                    </td>
-
-                    <td className="py-2.5 px-3 text-amber-400 font-medium">{h.maquilero_nombre || '-'}</td>
-                    <td className="py-2.5 px-3 text-zinc-400 italic text-xs">{h.notas || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* MODAL CREAR NUEVO LOTE */}
+      {/* MODAL NUEVO LOTE */}
       {modalNuevoLote && (
-        <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h3 className="text-lg font-bold text-zinc-100 uppercase">
-                Lanzar Nuevo Lote a Corte
-              </h3>
-              <button
-                onClick={() => setModalNuevoLote(false)}
-                className="text-zinc-400 hover:text-white font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase border-b border-slate-200 dark:border-zinc-800 pb-2">
+              Ingresar Lote a Corte
+            </h3>
             <form onSubmit={handleCrearLote} className="space-y-4">
               <div>
-                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Modelo de Calzado
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 block mb-1">
+                  Modelo
                 </label>
                 <select
                   value={nuevoModelo}
                   onChange={(e) => setNuevoModelo(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none"
                 >
                   {modelos.map((m) => (
                     <option key={m.id} value={m.nombre}>
@@ -405,13 +366,13 @@ export default function ProcesosPage() {
               </div>
 
               <div>
-                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Corrida por Talla (Puntos Cerrados 22-26)
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 block mb-1">
+                  Pares por Talla
                 </label>
-                <div className="grid grid-cols-5 gap-2">
-                  {[22, 23, 24, 25, 26].map((t) => (
+                <div className="grid grid-cols-6 gap-1">
+                  {[22, 23, 24, 25, 26, 27].map((t) => (
                     <div key={t} className="text-center">
-                      <span className="text-xs font-mono text-zinc-400 font-bold block mb-1">#{t}</span>
+                      <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400 block">#{t}</span>
                       <input
                         type="number"
                         min="0"
@@ -419,42 +380,29 @@ export default function ProcesosPage() {
                         onChange={(e) =>
                           setTallasLote((prev) => ({
                             ...prev,
-                            [t]: Math.max(0, parseInt(e.target.value, 10) || 0),
+                            [t]: parseInt(e.target.value, 10) || 0,
                           }))
                         }
-                        className="w-full bg-zinc-950 border border-zinc-700 text-center font-mono font-extrabold text-sm text-zinc-100 rounded-lg py-1.5 focus:outline-none"
+                        className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-center font-mono font-bold text-sm text-slate-900 dark:text-white rounded py-1"
                       />
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Notas / Observaciones
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Prioridad pedido cliente..."
-                  value={nuevoNotas}
-                  onChange={(e) => setNuevoNotas(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm focus:outline-none"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-zinc-800">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setModalNuevoLote(false)}
-                  className="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs sm:text-sm font-bold"
+                  className="flex-1 py-2.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold uppercase"
+                  className="flex-1 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold uppercase"
                 >
-                  Lanzar Lote
+                  Guardar Lote
                 </button>
               </div>
             </form>
@@ -462,45 +410,22 @@ export default function ProcesosPage() {
         </div>
       )}
 
-      {/* MODAL AVANZAR ETAPA DE LOTE */}
+      {/* MODAL MOVER LOTE */}
       {loteMover && (
-        <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <div>
-                <span className="font-mono text-xs text-emerald-400 font-bold">
-                  {loteMover.folio}
-                </span>
-                <h3 className="text-lg font-bold text-zinc-100 uppercase">
-                  Avanzar Etapa de Producción
-                </h3>
-              </div>
-              <button
-                onClick={() => setLoteMover(null)}
-                className="text-zinc-400 hover:text-white font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase border-b border-slate-200 dark:border-zinc-800 pb-2">
+              Avanzar Lote {loteMover.folio}
+            </h3>
             <form onSubmit={handleConfirmarMovimiento} className="space-y-4">
-              <div className="bg-zinc-950 p-3 rounded-xl border border-zinc-800 text-xs text-zinc-300 space-y-1">
-                <div>
-                  Modelo: <span className="font-bold text-zinc-100">{loteMover.modelo}</span> ({loteMover.total_pares} pares)
-                </div>
-                <div>
-                  Etapa Actual: <span className="font-bold text-amber-400">{loteMover.etapa_actual}</span>
-                </div>
-              </div>
-
               <div>
-                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Nueva Etapa Destino
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 block mb-1">
+                  Siguiente Etapa
                 </label>
                 <select
                   value={etapaDestino}
                   onChange={(e) => setEtapaDestino(e.target.value as EtapaProduccion)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none"
                 >
                   {ETAPAS.map((e) => (
                     <option key={e.key} value={e.key}>
@@ -511,49 +436,36 @@ export default function ProcesosPage() {
               </div>
 
               <div>
-                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Maquilero / Taller Responsable (Opcional)
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 block mb-1">
+                  Taller / Maquilero Asignado (Opcional)
                 </label>
                 <select
                   value={maquileroAsignadoId}
                   onChange={(e) => setMaquileroAsignadoId(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm font-medium focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="">Ninguno (Proceso Interno)</option>
+                  <option value="">Sin taller asignado</option>
                   {maquileros.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.nombre} (${m.tarifa_por_par.toFixed(2)}/par)
+                      {m.nombre}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="text-xs font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Notas de Transferencia
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Entregado en turno matutino..."
-                  value={notasMovimiento}
-                  onChange={(e) => setNotasMovimiento(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3 py-2 text-sm focus:outline-none"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-3 border-t border-zinc-800">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setLoteMover(null)}
-                  className="px-4 py-2 bg-zinc-800 text-zinc-300 rounded-xl text-xs sm:text-sm font-bold"
+                  className="flex-1 py-2.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold uppercase"
+                  className="flex-1 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold uppercase"
                 >
-                  Confirmar Avance
+                  Confirmar
                 </button>
               </div>
             </form>

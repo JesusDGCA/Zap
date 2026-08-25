@@ -10,7 +10,8 @@ import {
   Trash2,
   Eye,
   Search,
-  ArrowLeft,
+  Calendar,
+  AlertTriangle,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
 import { Maquilero, ResumenPagoSemanal, TicketPagoSemanalGuardado } from '@/types/database';
@@ -30,7 +31,6 @@ export default function PagoSemanalPage() {
   const [ticketSeleccionadoHistorial, setTicketSeleccionadoHistorial] = useState<TicketPagoSemanalGuardado | null>(null);
 
   const [mensajeGuardado, setMensajeGuardado] = useState<string | null>(null);
-  const [filtroMaquileroHistorial, setFiltroMaquileroHistorial] = useState<string>('todos');
   const [busquedaHistorial, setBusquedaHistorial] = useState<string>('');
 
   const cargarHistorial = () => {
@@ -62,14 +62,14 @@ export default function PagoSemanalPage() {
     if (!resumen || resumen.items.length === 0) return;
     const ticketGuardado = ProductionStore.guardarTicketPagoSemanal(resumen);
     cargarHistorial();
-    setMensajeGuardado(`Ticket ${ticketGuardado.folio} guardado en historial.`);
+    setMensajeGuardado(`Nota de pago ${ticketGuardado.folio} guardada en historial.`);
     setTimeout(() => {
       setMensajeGuardado(null);
     }, 3000);
   };
 
   const handleEliminarTicket = (id: string, folio: string) => {
-    if (confirm(`¿Eliminar el ticket ${folio} del historial?`)) {
+    if (confirm(`¿Deseas eliminar la nota de pago ${folio}?`)) {
       ProductionStore.eliminarTicketPagoSemanal(id);
       cargarHistorial();
       if (ticketSeleccionadoHistorial?.id === id) {
@@ -78,342 +78,312 @@ export default function PagoSemanalPage() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   const ticketsFiltrados = ticketsGuardados.filter((t) => {
-    const cumpleMaquilero =
-      filtroMaquileroHistorial === 'todos' || t.maquilero_id === filtroMaquileroHistorial;
-    const cumpleBusqueda =
-      t.folio.toLowerCase().includes(busquedaHistorial.toLowerCase()) ||
-      t.maquilero_nombre.toLowerCase().includes(busquedaHistorial.toLowerCase()) ||
-      t.fecha_inicio.includes(busquedaHistorial) ||
-      t.fecha_fin.includes(busquedaHistorial);
-    return cumpleMaquilero && cumpleBusqueda;
+    const texto = `${t.folio} ${t.maquilero_nombre}`.toLowerCase();
+    return texto.includes(busquedaHistorial.toLowerCase());
   });
 
   return (
-    <div className="space-y-6 w-full max-w-6xl mx-auto">
-      {/* HEADER PRINCIPAL */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-zinc-800 print:hidden">
+    <div className="space-y-6 w-full max-w-5xl mx-auto">
+      {/* ENCABEZADO */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200 dark:border-zinc-800 print:hidden">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-100 uppercase">
-            Pago Semanal — Raya a Destajo
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white uppercase flex items-center gap-2">
+            <Receipt className="w-7 h-7 text-blue-700 dark:text-blue-500" />
+            <span>4. Pagar Raya Semanal a Maquileros</span>
           </h1>
-          <p className="text-sm sm:text-base text-zinc-400 mt-1">
-            Cálculo por par entregado e historial de tickets de liquidación.
+          <p className="text-sm sm:text-base text-slate-600 dark:text-zinc-400 mt-0.5">
+            Liquidacion de pares completos entregados en la semana.
           </p>
         </div>
 
-        {/* PESTAÑAS */}
-        <div className="flex items-center bg-zinc-900 p-1.5 rounded-xl border border-zinc-800">
+        <div className="flex items-center bg-slate-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-slate-200 dark:border-zinc-800">
           <button
             onClick={() => {
               setActiveTab('generar');
               setTicketSeleccionadoHistorial(null);
             }}
-            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-              activeTab === 'generar'
-                ? 'bg-zinc-800 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
+            className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+              activeTab === 'generar' && !ticketSeleccionadoHistorial
+                ? 'bg-blue-700 text-white shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
             }`}
           >
-            Generar Pago
+            Calcular Raya
           </button>
           <button
             onClick={() => setActiveTab('historial')}
-            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${
               activeTab === 'historial'
-                ? 'bg-zinc-800 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-blue-700 text-white shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
             }`}
           >
-            Historial ({ticketsGuardados.length})
+            Historial de Notas ({ticketsGuardados.length})
           </button>
         </div>
       </div>
 
       {mensajeGuardado && (
-        <div className="bg-emerald-950/60 border border-emerald-700/80 text-emerald-200 p-3.5 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-semibold print:hidden">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <span>{mensajeGuardado}</span>
-          </div>
-          <button
-            onClick={() => setActiveTab('historial')}
-            className="text-xs sm:text-sm font-bold text-emerald-400 underline"
-          >
-            Ver Historial →
-          </button>
+        <div className="bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 rounded-2xl p-4 text-center font-semibold text-sm sm:text-base shadow-sm flex items-center justify-center gap-3 print:hidden">
+          <CheckCircle2 className="w-5 h-5 text-blue-700 dark:text-blue-400 shrink-0" />
+          <span>{mensajeGuardado}</span>
         </div>
       )}
 
-      {/* PESTAÑA GENERAR PAGO */}
-      {activeTab === 'generar' && (
+      {/* VISTA 1: CALCULAR RAYA SEMANAL */}
+      {activeTab === 'generar' && !ticketSeleccionadoHistorial && (
         <div className="space-y-6">
-          {/* CONTROLES DE FILTRO */}
-          <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-5 space-y-4 print:hidden">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* CONTROLES: TALLER Y FECHAS */}
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm space-y-4 print:hidden">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="text-xs sm:text-sm font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Maquilero Destino
+                <label className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase block mb-1">
+                  1. Taller o Maquilero
                 </label>
                 <select
                   value={selectedMaquileroId}
                   onChange={(e) => setSelectedMaquileroId(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3.5 py-2.5 text-sm sm:text-base font-semibold focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none"
                 >
                   {maquileros.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.nombre} ({formatMXN(m.tarifa_por_par)}/par)
+                      {m.nombre} (${m.tarifa_por_par.toFixed(2)} / par)
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="text-xs sm:text-sm font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Fecha Inicio (Lunes)
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1">
+                  2. Fecha Inicio
                 </label>
                 <input
                   type="date"
                   value={fechaInicio}
                   onChange={(e) => setFechaInicio(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3.5 py-2.5 text-sm sm:text-base font-semibold focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm font-mono focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs sm:text-sm font-mono font-bold text-zinc-400 uppercase block mb-1.5">
-                  Fecha Fin (Sábado)
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1">
+                  3. Fecha Fin
                 </label>
                 <input
                   type="date"
                   value={fechaFin}
                   onChange={(e) => setFechaFin(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl px-3.5 py-2.5 text-sm sm:text-base font-semibold focus:outline-none"
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm font-mono focus:outline-none"
                 />
               </div>
             </div>
-
-            {resumen && resumen.items.length > 0 && (
-              <div className="pt-3 flex flex-wrap items-center justify-end gap-3 border-t border-zinc-800">
-                <button
-                  onClick={handleGuardarTicket}
-                  className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold text-xs sm:text-sm rounded-xl border border-zinc-700 flex items-center gap-2 transition-colors shadow"
-                >
-                  <Save className="w-4 h-4 text-emerald-400" />
-                  <span>Guardar Ticket en Historial</span>
-                </button>
-                <button
-                  onClick={handlePrint}
-                  className="px-4 py-2.5 bg-zinc-100 hover:bg-white text-zinc-950 font-extrabold text-xs sm:text-sm rounded-xl flex items-center gap-2 shadow transition-colors"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Imprimir Ticket (PDF)</span>
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* VISTA DEL TICKET ACTUAL */}
-          {resumen && (
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 sm:p-8 space-y-6 print:bg-white print:text-black print:p-0 print:border-none">
-              <div className="border-b border-zinc-800 print:border-black pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          {/* RESULTADO DE LA LIQUIDACION */}
+          {!resumen || resumen.items.length === 0 ? (
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-2 shadow-sm">
+              <Receipt className="w-10 h-10 text-slate-400 dark:text-zinc-600 mx-auto" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Sin entregas registradas en esta semana
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-sm mx-auto">
+                No hay recepciones de calzado completadas para este maquilero en el periodo seleccionado.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-zinc-900 border-2 border-blue-700 dark:border-blue-600 rounded-2xl p-6 shadow-xl space-y-5 print:border-black print:p-0">
+              {/* ENCABEZADO DEL TICKET */}
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 flex-wrap gap-2">
                 <div>
-                  <span className="text-xs font-mono text-emerald-400 print:text-black uppercase font-bold">
-                    FÁBRICA DE CALZADO — CONTROL DE RAYA
+                  <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase block">
+                    Nota de Liquidacion Semanal
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-zinc-100 print:text-black uppercase">
-                    TICKET DE PAGO SEMANAL
-                  </h2>
-                  <p className="text-xs sm:text-sm text-zinc-400 print:text-gray-600 mt-0.5">
-                    Periodo: <strong>{fechaInicio}</strong> al <strong>{fechaFin}</strong>
-                  </p>
-                </div>
-                <div className="bg-zinc-950 print:bg-gray-100 border border-zinc-800 print:border-gray-300 rounded-xl p-4 text-right">
-                  <span className="text-xs text-zinc-400 print:text-gray-600 uppercase block font-mono font-bold">
-                    Tarifa por Par
-                  </span>
-                  <span className="text-xl sm:text-2xl font-mono font-extrabold text-zinc-100 print:text-black">
-                    {formatMXN(resumen.maquilero.tarifa_por_par)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-zinc-950/60 print:bg-gray-50 border border-zinc-800 print:border-gray-300 rounded-xl p-4 flex flex-col sm:flex-row justify-between gap-3 text-sm">
-                <div>
-                  <span className="text-xs text-zinc-400 uppercase font-mono font-bold block">Maquilero / Taller</span>
-                  <span className="text-base sm:text-lg font-extrabold text-zinc-100 print:text-black">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     {resumen.maquilero.nombre}
+                  </h3>
+                  <span className="text-xs text-slate-500 dark:text-zinc-400">
+                    Periodo: {resumen.fecha_inicio} al {resumen.fecha_fin} • Tarifa: ${resumen.maquilero.tarifa_por_par.toFixed(2)}/par
                   </span>
                 </div>
-                <div className="flex items-center gap-4 sm:gap-6 text-right flex-wrap justify-end">
-                  <div>
-                    <span className="text-xs text-zinc-400 uppercase font-mono font-bold block">Pares Entregados</span>
-                    <span className="font-extrabold font-mono text-emerald-400 print:text-black text-base">
-                      {resumen.total_pares_completos} pares
-                    </span>
-                  </div>
-                  {Boolean(resumen.total_cargos_qc_mxn && resumen.total_cargos_qc_mxn > 0) && (
-                    <div>
-                      <span className="text-xs text-rose-400 uppercase font-mono font-bold block">Cargos QC / Merma</span>
-                      <span className="font-extrabold font-mono text-rose-400 text-base">
-                        -{formatMXN(resumen.total_cargos_qc_mxn!)}
-                      </span>
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-xs text-zinc-400 uppercase font-mono font-bold block">Total Liquidado</span>
-                    <span className="font-extrabold font-mono text-emerald-400 print:text-black text-base sm:text-lg">
-                      {formatMXN(resumen.total_pagar_mxn)}
-                    </span>
-                  </div>
+
+                <div className="flex items-center gap-2 print:hidden">
+                  <button
+                    onClick={handleGuardarTicket}
+                    className="px-3.5 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-300 dark:border-zinc-700"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Guardar Nota</span>
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold uppercase flex items-center gap-1.5 shadow"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Imprimir Nota</span>
+                  </button>
                 </div>
               </div>
 
+              {/* TOTAL GIGANTE A PAGAR */}
+              <div className="p-5 bg-blue-50 dark:bg-blue-950/60 rounded-2xl border border-blue-200 dark:border-blue-800 flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <span className="text-xs font-mono font-bold text-slate-600 dark:text-blue-300 uppercase block">
+                    Total a Pagar en Raya
+                  </span>
+                  <span className="text-3xl sm:text-4xl font-black font-mono text-blue-800 dark:text-blue-300">
+                    {formatMXN(resumen.total_pagar_mxn)}
+                  </span>
+                </div>
+                <div className="text-right font-mono">
+                  <span className="text-sm font-bold text-slate-700 dark:text-zinc-300 block">
+                    {resumen.total_pares_completos} pares completos
+                  </span>
+                  {resumen.total_faltantes_piezas > 0 && (
+                    <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold block">
+                      {resumen.total_faltantes_piezas} piezas faltantes
+                    </span>
+                  )}
+                </div>
+              </div>
 
-              {/* DETALLE TABLA DE RECEPCIONES */}
-              <div className="overflow-x-auto">
+              {/* TABLA DE DETALLE */}
+              <div className="border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden">
                 <table className="w-full text-xs sm:text-sm text-left">
                   <thead>
-                    <tr className="border-b border-zinc-800 print:border-black text-zinc-400 print:text-black font-mono text-xs">
-                      <th className="py-3 px-3 font-semibold">Modelo</th>
-                      <th className="py-3 px-3 font-semibold">Fecha</th>
-                      <th className="py-3 px-3 font-semibold text-right">Pares</th>
-                      <th className="py-3 px-3 font-semibold text-right">Tarifa</th>
-                      <th className="py-3 px-3 font-semibold text-right">Subtotal</th>
+                    <tr className="bg-slate-100 dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-800 font-mono font-bold text-slate-600 dark:text-zinc-400">
+                      <th className="py-2.5 px-3">Fecha</th>
+                      <th className="py-2.5 px-3">Modelo</th>
+                      <th className="py-2.5 px-3 text-center">Talla</th>
+                      <th className="py-2.5 px-3 text-center">Pares</th>
+                      <th className="py-2.5 px-3 text-right">Subtotal</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/60 print:divide-gray-300">
-                    {resumen.items.map((it) => (
-                      <tr key={it.recepcion_id} className="hover:bg-zinc-800/40">
-                        <td className="py-3 px-3 text-zinc-100 print:text-black font-bold">
-                          {it.modelo} (Talla #{it.talla})
-                        </td>
-                        <td className="py-3 px-3 text-zinc-400 print:text-black font-mono text-xs">
-                          {formatDateShort(it.fecha)}
-                        </td>
-                        <td className="py-3 px-3 text-right font-mono font-extrabold text-zinc-100 print:text-black">
-                          {it.pares_completos}
-                        </td>
-                        <td className="py-3 px-3 text-right font-mono text-zinc-400 print:text-black">
-                          {formatMXN(it.tarifa_unitaria)}
-                        </td>
-                        <td className="py-3 px-3 text-right font-mono font-extrabold text-emerald-400 print:text-black">
-                          {formatMXN(it.subtotal_pagar)}
-                        </td>
+                  <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
+                    {resumen.items.map((it, idx) => (
+                      <tr key={idx}>
+                        <td className="py-2 px-3 text-slate-600 dark:text-zinc-400 font-mono text-xs">{formatDateShort(it.fecha)}</td>
+                        <td className="py-2 px-3 font-bold text-slate-900 dark:text-white">{it.modelo}</td>
+                        <td className="py-2 px-3 text-center font-mono font-bold">#{it.talla}</td>
+                        <td className="py-2 px-3 text-center font-mono font-bold">{it.pares_completos}</td>
+                        <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">{formatMXN(it.subtotal_pagar)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {/* INCIDENCIAS SI EXISTEN */}
+              {resumen.incidencias && resumen.incidencias.length > 0 && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 text-xs space-y-1">
+                  <span className="font-bold text-amber-800 dark:text-amber-300 block">Notas e Incidencias:</span>
+                  {resumen.incidencias.map((inc, i) => (
+                    <div key={i} className="text-amber-900 dark:text-amber-200">
+                      - {inc.modelo} (#{inc.talla}): {inc.faltantes} {inc.nota && `• ${inc.nota}`}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* PESTAÑA HISTORIAL */}
-      {activeTab === 'historial' && (
+      {/* VISTA 2: HISTORIAL DE TICKETS GUARDADOS */}
+      {(activeTab === 'historial' || ticketSeleccionadoHistorial) && (
         <div className="space-y-4">
           {ticketSeleccionadoHistorial ? (
-            <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 space-y-4 print:bg-white print:text-black">
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-3 print:hidden">
+            <div className="bg-white dark:bg-zinc-900 border-2 border-blue-700 dark:border-blue-600 rounded-2xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 flex-wrap gap-2">
+                <div>
+                  <button
+                    onClick={() => setTicketSeleccionadoHistorial(null)}
+                    className="text-xs font-bold text-blue-700 dark:text-blue-400 hover:underline block mb-1"
+                  >
+                    ← Volver a lista
+                  </button>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                    Nota {ticketSeleccionadoHistorial.folio} — {ticketSeleccionadoHistorial.maquilero_nombre}
+                  </h3>
+                </div>
+
                 <button
-                  onClick={() => setTicketSeleccionadoHistorial(null)}
-                  className="text-xs sm:text-sm text-zinc-400 hover:text-zinc-100 flex items-center gap-1.5 font-semibold"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold uppercase flex items-center gap-1.5 shadow"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Volver al listado
-                </button>
-                <button
-                  onClick={handlePrint}
-                  className="px-4 py-2 bg-zinc-100 text-zinc-950 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-1.5 shadow"
-                >
-                  <Printer className="w-4 h-4" /> Imprimir Ticket
+                  <Printer className="w-4 h-4" />
+                  <span>Imprimir Nota</span>
                 </button>
               </div>
 
-              <div>
-                <span className="text-xs font-mono text-emerald-400 uppercase font-bold">
-                  TICKET GUARDADO — {ticketSeleccionadoHistorial.folio}
-                </span>
-                <h2 className="text-lg sm:text-xl font-bold text-zinc-100 print:text-black">
-                  {ticketSeleccionadoHistorial.maquilero_nombre}
-                </h2>
-                <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-                  Periodo: {ticketSeleccionadoHistorial.fecha_inicio} al {ticketSeleccionadoHistorial.fecha_fin} — Total:{' '}
-                  <span className="font-extrabold text-emerald-400">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/60 rounded-xl border border-blue-200 dark:border-blue-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-mono font-bold text-slate-600 dark:text-blue-300 uppercase block">Total Pagado</span>
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-blue-800 dark:text-blue-300">
                     {formatMXN(ticketSeleccionadoHistorial.total_pagar_mxn)}
                   </span>
-                </p>
+                </div>
+                <span className="font-mono font-bold text-sm text-slate-700 dark:text-zinc-300">
+                  {ticketSeleccionadoHistorial.total_pares_completos} pares
+                </span>
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div className="relative w-full sm:w-72">
-                  <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase">
+                  Notas de Pago Guardadas
+                </h2>
+                <div className="w-full sm:w-64 relative">
+                  <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Buscar ticket o maquilero..."
+                    placeholder="Buscar por folio o maquilero..."
                     value={busquedaHistorial}
                     onChange={(e) => setBusquedaHistorial(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm focus:outline-none font-medium"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none"
                   />
                 </div>
-                <span className="text-xs sm:text-sm text-zinc-400 font-mono font-medium">
-                  {ticketsFiltrados.length} tickets guardados
-                </span>
               </div>
 
               {ticketsFiltrados.length === 0 ? (
-                <div className="py-10 text-center text-sm text-zinc-500">
-                  No hay tickets guardados o no coinciden con la búsqueda.
+                <div className="py-12 text-center text-sm text-slate-500">
+                  No hay notas de pago guardadas.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {ticketsFiltrados.map((t) => (
+                <div className="space-y-3">
+                  {ticketsFiltrados.map((tck) => (
                     <div
-                      key={t.id}
-                      className="bg-zinc-900/90 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-5 space-y-3 flex flex-col justify-between"
+                      key={tck.id}
+                      className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-4 flex items-center justify-between flex-wrap gap-3"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs sm:text-sm font-bold text-emerald-400">
-                          {t.folio}
-                        </span>
-                        <span className="text-xs text-zinc-500 font-mono">
-                          {formatDateShort(t.fecha_guardado)}
-                        </span>
-                      </div>
-
                       <div>
-                        <h3 className="text-sm sm:text-base font-bold text-zinc-100">{t.maquilero_nombre}</h3>
-                        <p className="text-xs text-zinc-400">
-                          {t.fecha_inicio} al {t.fecha_fin}
-                        </p>
-                      </div>
-
-                      <div className="pt-3 border-t border-zinc-800 flex items-center justify-between text-xs sm:text-sm">
-                        <span className="font-mono text-zinc-300">{t.total_pares_completos} pares</span>
-                        <span className="font-mono font-extrabold text-emerald-400 text-sm sm:text-base">
-                          {formatMXN(t.total_pagar_mxn)}
+                        <span className="font-mono text-xs font-bold text-blue-700 dark:text-blue-400 block">{tck.folio}</span>
+                        <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white block">{tck.maquilero_nombre}</span>
+                        <span className="text-xs text-slate-500 dark:text-zinc-400">
+                          {tck.fecha_inicio} al {tck.fecha_fin} • {tck.total_pares_completos} pares
                         </span>
                       </div>
 
-                      <div className="pt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-base font-mono font-black text-blue-700 dark:text-blue-400">
+                          {formatMXN(tck.total_pagar_mxn)}
+                        </span>
                         <button
-                          onClick={() => handleEliminarTicket(t.id, t.folio)}
-                          className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
-                          title="Eliminar ticket"
+                          type="button"
+                          onClick={() => setTicketSeleccionadoHistorial(tck)}
+                          className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold flex items-center gap-1"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Ver</span>
                         </button>
                         <button
-                          onClick={() => setTicketSeleccionadoHistorial(t)}
-                          className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5"
+                          type="button"
+                          onClick={() => handleEliminarTicket(tck.id, tck.folio)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                          title="Eliminar nota"
                         >
-                          <Eye className="w-3.5 h-3.5" /> Ver Ticket
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
