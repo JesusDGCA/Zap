@@ -168,3 +168,35 @@ CREATE POLICY "Permitir todo acceso a ordenes_salida_detalle" ON public.ordenes_
 CREATE POLICY "Permitir todo acceso a recepciones" ON public.recepciones FOR ALL USING (true);
 CREATE POLICY "Permitir todo acceso a tickets_pagos_semanales" ON public.tickets_pagos_semanales FOR ALL USING (true);
 CREATE POLICY "Permitir todo acceso a salidas_generales" ON public.salidas_generales FOR ALL USING (true);
+
+-- 13. TABLA DE TICKETS DE FORRADO (MVP)
+CREATE TABLE IF NOT EXISTS public.tickets_forrado (
+    id VARCHAR(100) PRIMARY KEY,
+    folio VARCHAR(100) UNIQUE NOT NULL,
+    fecha VARCHAR(50) NOT NULL,
+    maquilero_id VARCHAR(100) REFERENCES public.maquileros(id) ON DELETE SET NULL,
+    maquilero_nombre VARCHAR(255) NOT NULL,
+    pares_enviados INT NOT NULL DEFAULT 0,
+    pares_recibidos INT NOT NULL DEFAULT 0,
+    pegamento_consumido NUMERIC(10, 2) DEFAULT 0.00,
+    forro_consumido NUMERIC(10, 2) DEFAULT 0.00,
+    estatus VARCHAR(50) DEFAULT 'Pendiente',
+    notas TEXT,
+    creado_en TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 14. TABLA DE RECEPCIONES DE FORRADO (ENTREGAS PARCIALES)
+CREATE TABLE IF NOT EXISTS public.recepciones_forrado (
+    id VARCHAR(100) PRIMARY KEY,
+    ticket_id VARCHAR(100) REFERENCES public.tickets_forrado(id) ON DELETE CASCADE,
+    fecha VARCHAR(50) NOT NULL,
+    pares_recibidos INT NOT NULL DEFAULT 0,
+    notas TEXT,
+    creado_en TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE public.tickets_forrado ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.recepciones_forrado ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Permitir todo acceso a tickets_forrado" ON public.tickets_forrado FOR ALL USING (true);
+CREATE POLICY "Permitir todo acceso a recepciones_forrado" ON public.recepciones_forrado FOR ALL USING (true);

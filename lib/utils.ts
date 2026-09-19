@@ -50,7 +50,19 @@ export function getWorkWeekRange(): { inicio: string; fin: string } {
   saturday.setHours(23, 59, 59, 999);
 
   return {
-    inicio: monday.toISOString().split('T')[0],
-    fin: saturday.toISOString().split('T')[0],
+    inicio: toFechaLocal(monday),
+    fin: toFechaLocal(saturday),
   };
+}
+
+/**
+ * Formatea una fecha como 'YYYY-MM-DD' usando la fecha LOCAL.
+ * toISOString() la convierte a UTC y en Mexico (UTC-6) adelanta un dia
+ * despues de las 18:00 h, lo que corrompia el rango semanal de la raya.
+ */
+export function toFechaLocal(date: Date): string {
+  const anio = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const dia = String(date.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
 }

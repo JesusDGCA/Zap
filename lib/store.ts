@@ -22,49 +22,54 @@ import {
   ItemRecetaBOM,
   FichaTecnicaModeloBOM,
   ResultadoExplosionMateriales,
+  Proveedor,
+  OrdenCompra,
+  OrdenCompraItem,
+  TicketForrado,
+  RecepcionForrado,
 } from '@/types/database';
 
 export const INITIAL_MODELOS: ModeloCalzado[] = [
   {
-    id: 'mod-hellen-3596',
-    nombre: 'HELLEN - 3596',
-    horma: 'HELLEN',
-    linea: 'HELLEN - 3596',
-    moldura: '3596',
-    estilo: '3596-02 CHAROL NEGRO ADRIANA BOCANEGRA (NEGRO)',
-    descripcion_estilo: 'ZAPATILLA DESTALONADA CON MOÑO',
-    cliente_default: 'ADRIANA BOCANEGRA',
-    troquel_especificacion: 'NOM 20 / TROQUEL: SINTETICO / SINTETICO PLATA / BOCASSAO PLATA',
-  },
-  {
-    id: 'mod-frozen',
-    nombre: 'Frozen',
-    horma: 'FROZEN',
-    linea: 'FROZEN - 2026',
+    id: 'mod-modelo-01',
+    nombre: 'MODELO 01 - 2026',
+    horma: 'ESTILO 01',
+    linea: 'MODELO 01 - 2026',
     moldura: '2026',
-    estilo: 'SANDALIA PLATAFORMA FROZEN',
-    descripcion_estilo: 'SANDALIA PLATAFORMA TACÓN 9CM',
-    cliente_default: 'CLASBEN',
-    troquel_especificacion: 'NOM 20 / TROQUEL: SINTETICO / ORO',
+    estilo: 'MODELO 01 - CHAROL NEGRO',
+    descripcion_estilo: 'ZAPATILLA DE LÍNEA CLÁSICA',
+    cliente_default: 'CLIENTE GENERAL',
+    troquel_especificacion: 'NOM 20 / GRABADO: SINTÉTICO / NEGRO / PLATAFORMA',
   },
   {
-    id: 'mod-carol',
-    nombre: 'Carol',
-    horma: 'CAROL',
-    linea: 'CAROL - CONFORT',
+    id: 'mod-modelo-02',
+    nombre: 'MODELO 02',
+    horma: 'ESTILO 02',
+    linea: 'MODELO 02 - 2026',
+    moldura: '3010',
+    estilo: 'SANDALIA PLATAFORMA MODELO 02',
+    descripcion_estilo: 'SANDALIA DE PLATAFORMA',
+    cliente_default: 'CLIENTE GENERAL',
+    troquel_especificacion: 'NOM 20 / GRABADO: SINTÉTICO / ORO',
+  },
+  {
+    id: 'mod-modelo-03',
+    nombre: 'MODELO 03',
+    horma: 'ESTILO 03',
+    linea: 'MODELO 03 - CONFORT',
     moldura: '1420',
-    estilo: 'MOCASÍN CONFORT DAMA',
-    descripcion_estilo: 'MOCASÍN SUAVE CON HERRAJE',
-    cliente_default: 'CKLASS',
-    troquel_especificacion: 'NOM 20 / TROQUEL: PIEL VACUNO / NEGRO',
+    estilo: 'MOCASÍN CONFORT MODELO 03',
+    descripcion_estilo: 'MOCASÍN CON HERRAJE',
+    cliente_default: 'CLIENTE GENERAL',
+    troquel_especificacion: 'NOM 20 / GRABADO: PIEL / NEGRO',
   },
 ];
 
 export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [
   {
-    id: 'bom-hellen-3596',
-    modelo_nombre: 'HELLEN - 3596',
-    notas: 'Receta estándar Zapatilla Destalonada con Moño 48 pares / Programa 260228',
+    id: 'bom-modelo-01',
+    modelo_nombre: 'MODELO 01 - 2026',
+    notas: 'Receta estándar de línea para producción base 48 pares',
     receta: [
       {
         id: 'r-1',
@@ -179,7 +184,7 @@ export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [
       {
         id: 'r-12',
         pieza: 'CAJA',
-        material_nombre: 'CAJA BOCASSAO 31*16.5*10.5',
+        material_nombre: 'CAJA MODELO 01 31*16.5*10.5',
         cantidad_por_par: 1.00,
         unidad_medida: 'PIEZA',
         consumo_total_unidad: 'PIEZA',
@@ -189,7 +194,7 @@ export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [
       {
         id: 'r-13',
         pieza: 'PLANTA',
-        material_nombre: 'HELLEN ESQ. 3596',
+        material_nombre: 'MODELO 01 ESQ. 2026',
         cantidad_por_par: 1.00,
         unidad_medida: 'PAR',
         consumo_total_unidad: 'PAR',
@@ -199,7 +204,7 @@ export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [
       {
         id: 'r-14',
         pieza: 'SUELA',
-        material_nombre: 'HELLEN NEGRO C/NEGRO',
+        material_nombre: 'MODELO 01 NEGRO C/NEGRO',
         cantidad_por_par: 1.00,
         unidad_medida: 'PAR',
         consumo_total_unidad: 'PAR',
@@ -209,7 +214,7 @@ export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [
       {
         id: 'r-15',
         pieza: 'TACON',
-        material_nombre: 'LULU CON FIRME NEGRO',
+        material_nombre: 'TACON MODELO 01 NEGRO',
         cantidad_por_par: 1.00,
         unidad_medida: 'PAR',
         consumo_total_unidad: 'PAR',
@@ -221,49 +226,40 @@ export const INITIAL_FICHAS_TECNICAS_BOM: FichaTecnicaModeloBOM[] = [
 ];
 
 export const INITIAL_INVENTARIO_CRUDO: InventarioCrudo[] = [
-  { id: 'inv-1', tipo_material: 'CHAROL 0.8 HQ NEGRO BOMBOM', talla: 0, cantidad_total: 50, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-2', tipo_material: 'CHAROL 0.8 HQ NEGRO VIRGEN', talla: 0, cantidad_total: 80, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-3', tipo_material: 'TIRA DOBLELLADA A TOPE 9MM CHAROL NEGRO', talla: 0, cantidad_total: 200, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-4', tipo_material: 'DURAZNO NEGRO VIRGEN', talla: 0, cantidad_total: 30, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-5', tipo_material: 'FORRO BARCELONA NEGRO', talla: 0, cantidad_total: 100, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-6', tipo_material: 'ELASTICO FORRADO 6MM KENYA NEGRO', talla: 0, cantidad_total: 50, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-7', tipo_material: 'ASTARX BR', talla: 0, cantidad_total: 40, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-8', tipo_material: 'LATEX 3MM REGULAR NATURAL SOFT', talla: 0, cantidad_total: 40, unidad_medida: 'MT', seccion: 'corte' },
-  { id: 'inv-9', tipo_material: 'CHINA BLANCO 30X70', talla: 0, cantidad_total: 2, unidad_medida: 'MILLAR', seccion: 'empaque' },
-  { id: 'inv-10', tipo_material: 'CAJA BOCASSAO 31*16.5*10.5', talla: 0, cantidad_total: 500, unidad_medida: 'PIEZA', seccion: 'empaque' },
-  { id: 'inv-11', tipo_material: 'HELLEN ESQ. 3596', talla: 23, cantidad_total: 50, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
-  { id: 'inv-12', tipo_material: 'HELLEN ESQ. 3596', talla: 24, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
-  { id: 'inv-13', tipo_material: 'HELLEN ESQ. 3596', talla: 25, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
-  { id: 'inv-14', tipo_material: 'HELLEN NEGRO C/NEGRO', talla: 23, cantidad_total: 50, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
-  { id: 'inv-15', tipo_material: 'HELLEN NEGRO C/NEGRO', talla: 24, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
-  { id: 'inv-16', tipo_material: 'HELLEN NEGRO C/NEGRO', talla: 25, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
-  { id: 'inv-17', tipo_material: 'LULU CON FIRME NEGRO', talla: 0, cantidad_total: 300, unidad_medida: 'PAR', seccion: 'suela_planta_tacon' },
+  { id: 'inv-1', tipo_material: 'CHAROL 0.8 HQ NEGRO BOMBOM', talla: 0, cantidad_total: 50, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 280 },
+  { id: 'inv-2', tipo_material: 'CHAROL 0.8 HQ NEGRO VIRGEN', talla: 0, cantidad_total: 80, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 310 },
+  { id: 'inv-3', tipo_material: 'TIRA DOBLELLADA A TOPE 9MM CHAROL NEGRO', talla: 0, cantidad_total: 200, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 45 },
+  { id: 'inv-4', tipo_material: 'DURAZNO NEGRO VIRGEN', talla: 0, cantidad_total: 30, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 185 },
+  { id: 'inv-5', tipo_material: 'FORRO BARCELONA NEGRO', talla: 0, cantidad_total: 100, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 95 },
+  { id: 'inv-6', tipo_material: 'ELASTICO FORRADO 6MM KENYA NEGRO', talla: 0, cantidad_total: 50, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 28 },
+  { id: 'inv-7', tipo_material: 'ASTARX BR', talla: 0, cantidad_total: 40, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 120 },
+  { id: 'inv-8', tipo_material: 'LATEX 3MM REGULAR NATURAL SOFT', talla: 0, cantidad_total: 40, unidad_medida: 'MT', seccion: 'corte', costo_unitario: 75 },
+  { id: 'inv-9', tipo_material: 'CHINA BLANCO 30X70', talla: 0, cantidad_total: 2, unidad_medida: 'MILLAR', seccion: 'empaque', costo_unitario: 350 },
+  { id: 'inv-10', tipo_material: 'CAJA MODELO 01 31*16.5*10.5', talla: 0, cantidad_total: 500, unidad_medida: 'PIEZA', seccion: 'empaque', costo_unitario: 18 },
+  { id: 'inv-11', tipo_material: 'MODELO 01 ESQ. 2026', talla: 23, cantidad_total: 50, unidad_medida: 'PAR', seccion: 'suela_planta_tacon', costo_unitario: 65 },
+  { id: 'inv-12', tipo_material: 'MODELO 01 ESQ. 2026', talla: 24, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon', costo_unitario: 65 },
+  { id: 'inv-13', tipo_material: 'MODELO 01 ESQ. 2026', talla: 25, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon', costo_unitario: 65 },
+  { id: 'inv-14', tipo_material: 'MODELO 01 NEGRO C/NEGRO', talla: 23, cantidad_total: 50, unidad_medida: 'PAR', seccion: 'suela_planta_tacon', costo_unitario: 55 },
+  { id: 'inv-15', tipo_material: 'MODELO 01 NEGRO C/NEGRO', talla: 24, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon', costo_unitario: 55 },
+  { id: 'inv-16', tipo_material: 'MODELO 01 NEGRO C/NEGRO', talla: 25, cantidad_total: 100, unidad_medida: 'PAR', seccion: 'suela_planta_tacon', costo_unitario: 55 },
+  { id: 'inv-17', tipo_material: 'TACON MODELO 01 NEGRO', talla: 0, cantidad_total: 300, unidad_medida: 'PAR', seccion: 'suela_planta_tacon', costo_unitario: 42 },
 ];
 
-export const INITIAL_LOTES_PRODUCCION: LoteProduccion[] = [
-  {
-    id: 'lote-1568',
-    folio: 'LOT-1568',
-    modelo: 'HELLEN - 3596',
-    total_pares: 48,
-    etapa_actual: 'Corte',
-    fecha_inicio: '2026-07-29',
-    desglose_tallas: [
-      { talla: 23, pares: 4 },
-      { talla: 23.5, pares: 4 },
-      { talla: 24, pares: 8 },
-      { talla: 24.5, pares: 8 },
-      { talla: 25, pares: 8 },
-      { talla: 25.5, pares: 8 },
-      { talla: 26, pares: 8 },
-    ],
-    notas: 'Programa 260228 - Zapatilla Destalonada con Moño - Cliente Adriana Bocanegra',
-  },
+export const INITIAL_PROVEEDORES: Proveedor[] = [
+  { id: 'prov-1', nombre: 'Pieles del Bajío S.A.', contacto: 'Carlos Martínez', telefono: '477-123-4567', materiales_que_surte: 'Charol, Durazno, Pieles Sintéticas' },
+  { id: 'prov-2', nombre: 'Curtidora León', contacto: 'María López', telefono: '477-234-5678', materiales_que_surte: 'Forros, Tiras, Elásticos' },
+  { id: 'prov-3', nombre: 'Suelas y Tacones MX', contacto: 'Roberto García', telefono: '477-345-6789', materiales_que_surte: 'Plantas, Suelas, Tacones' },
 ];
+
+export const INITIAL_LOTES_PRODUCCION: LoteProduccion[] = [];
 
 export const INITIAL_MAQUILEROS: Maquilero[] = [
-  { id: 'mq-1', nombre: 'Taller Don Beto - Forrado & Montado', tarifa_por_par: 16.5 },
-  { id: 'mq-2', nombre: 'Pespunte Doña Carmen', tarifa_por_par: 14.0 },
+  { id: 'mq-miguel', nombre: 'Miguel', tarifa_por_par: 3 },
+  { id: 'mq-test', nombre: 'Test', tarifa_por_par: 4 },
+  { id: 'mq-juan', nombre: 'Juan', tarifa_por_par: 5 },
+  { id: 'mq-rosa', nombre: 'Rosa', tarifa_por_par: 5.5 },
+  { id: 'mq-luis', nombre: 'Luis', tarifa_por_par: 6 },
+  { id: 'mq-maria', nombre: 'María', tarifa_por_par: 7 },
 ];
 export const INITIAL_ORDENES_SALIDA: OrdenSalida[] = [];
 export const INITIAL_ORDENES_SALIDA_DETALLE: OrdenSalidaDetalle[] = [];
@@ -271,6 +267,8 @@ export const INITIAL_RECEPCIONES: Recepcion[] = [];
 export const INITIAL_TICKETS_PAGOS: TicketPagoSemanalGuardado[] = [];
 export const INITIAL_PEDIDOS_CLIENTES: PedidoCliente[] = [];
 export const INITIAL_SALIDAS_GENERALES: SalidaGeneral[] = [];
+export const INITIAL_TICKETS_FORRADO: TicketForrado[] = [];
+export const INITIAL_RECEPCIONES_FORRADO: RecepcionForrado[] = [];
 
 const STORAGE_KEYS = {
   MAQUILEROS: 'calzado_pwa_maquileros',
@@ -285,24 +283,16 @@ const STORAGE_KEYS = {
   LOTES_PRODUCCION: 'calzado_pwa_lotes_produccion',
   HISTORIAL_MOVIMIENTOS: 'calzado_pwa_historial_movimientos',
   FICHAS_TECNICAS_BOM: 'calzado_pwa_fichas_tecnicas_bom',
+  PROVEEDORES: 'calzado_pwa_proveedores',
+  ORDENES_COMPRA: 'calzado_pwa_ordenes_compra',
+  TICKETS_FORRADO: 'calzado_pwa_tickets_forrado',
+  RECEPCIONES_FORRADO: 'calzado_pwa_recepciones_forrado',
 };
 
 function checkAndAutoPurgeOnce(): void {
   if (typeof window === 'undefined') return;
-  // Inicializar con datos si está vacío
+  // Marca de inicialización para no repetir lógica cada vez
   if (localStorage.getItem('calzado_pwa_system_v2_initialized') !== 'true') {
-    if (!localStorage.getItem(STORAGE_KEYS.MODELOS) || JSON.parse(localStorage.getItem(STORAGE_KEYS.MODELOS) || '[]').length === 0) {
-      localStorage.setItem(STORAGE_KEYS.MODELOS, JSON.stringify(INITIAL_MODELOS));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.FICHAS_TECNICAS_BOM) || JSON.parse(localStorage.getItem(STORAGE_KEYS.FICHAS_TECNICAS_BOM) || '[]').length === 0) {
-      localStorage.setItem(STORAGE_KEYS.FICHAS_TECNICAS_BOM, JSON.stringify(INITIAL_FICHAS_TECNICAS_BOM));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.INVENTARIO) || JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTARIO) || '[]').length === 0) {
-      localStorage.setItem(STORAGE_KEYS.INVENTARIO, JSON.stringify(INITIAL_INVENTARIO_CRUDO));
-    }
-    if (!localStorage.getItem(STORAGE_KEYS.LOTES_PRODUCCION) || JSON.parse(localStorage.getItem(STORAGE_KEYS.LOTES_PRODUCCION) || '[]').length === 0) {
-      localStorage.setItem(STORAGE_KEYS.LOTES_PRODUCCION, JSON.stringify(INITIAL_LOTES_PRODUCCION));
-    }
     localStorage.setItem('calzado_pwa_system_v2_initialized', 'true');
   }
 }
@@ -312,12 +302,10 @@ function getStoredData<T>(key: string, fallback: T): T {
   checkAndAutoPurgeOnce();
   try {
     const item = localStorage.getItem(key);
-    if (!item) return fallback;
-    const parsed = JSON.parse(item);
-    if (Array.isArray(fallback) && Array.isArray(parsed) && parsed.length === 0) {
-      return fallback;
-    }
-    return parsed;
+    // Se clona el fallback: si se devuelve por referencia, las altas del usuario
+    // modifican las constantes INITIAL_* y los catalogos base se contaminan.
+    if (item === null) return JSON.parse(JSON.stringify(fallback)) as T;
+    return JSON.parse(item) as T;
   } catch (e) {
     console.error(`Error leyendo ${key} de localStorage`, e);
     return fallback;
@@ -331,6 +319,57 @@ function setStoredData<T>(key: string, value: T): void {
   } catch (e) {
     console.error(`Error guardando ${key} en localStorage`, e);
   }
+}
+
+/**
+ * Convierte una fecha 'YYYY-MM-DD' a fecha LOCAL.
+ * Ojo: new Date('2026-09-15') la interpreta como UTC, lo que en Mexico (UTC-6)
+ * la recorre al dia anterior y hacia que la raya semanal no encontrara las
+ * entregas del dia seleccionado.
+ */
+function parseFechaHoraLocal(fecha: string, finDelDia: boolean): Date {
+  const soloFecha = /^(\d{4})-(\d{2})-(\d{2})$/.exec(fecha);
+  if (soloFecha) {
+    const anio = Number(soloFecha[1]);
+    const mes = Number(soloFecha[2]) - 1;
+    const dia = Number(soloFecha[3]);
+    return finDelDia
+      ? new Date(anio, mes, dia, 23, 59, 59, 999)
+      : new Date(anio, mes, dia, 0, 0, 0, 0);
+  }
+  return new Date(fecha);
+}
+
+/**
+ * Consumo total requerido de un insumo de la receta.
+ * Es la MISMA formula que usa la Explosion de Materiales: respeta
+ * factor_conversion y las conversiones DCM/MT, CM/MT y PIEZA/MILLAR.
+ */
+function calcularCantidadRequeridaItem(item: ItemRecetaBOM, totalPares: number): number {
+  const unidadPar = (item.unidad_medida || 'pares').toUpperCase();
+  const unidadTotal = (item.consumo_total_unidad || item.unidad_medida || 'pares').toUpperCase();
+
+  if (item.factor_conversion !== undefined && item.factor_conversion > 0) {
+    return Number((item.cantidad_por_par * totalPares * item.factor_conversion).toFixed(2));
+  }
+  if (unidadPar === 'DCM' && unidadTotal === 'MT') {
+    return Number(((item.cantidad_por_par * totalPares) / 135).toFixed(2));
+  }
+  if (unidadPar === 'CM' && unidadTotal === 'MT') {
+    return Number(((item.cantidad_por_par * totalPares) / 100).toFixed(2));
+  }
+  if (unidadPar === 'PIEZA' && unidadTotal === 'MILLAR') {
+    return Number(((item.cantidad_por_par * totalPares) / 1000).toFixed(2));
+  }
+  return Number((item.cantidad_por_par * totalPares).toFixed(2));
+}
+
+/**
+ * Genera un id unico. Date.now() a secas puede repetirse cuando se crean dos
+ * registros en el mismo milisegundo (dos maquileros con el mismo id, etc.).
+ */
+function generarId(prefijo: string): string {
+  return `${prefijo}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 }
 
 export class ProductionStore {
@@ -357,7 +396,7 @@ export class ProductionStore {
     const index = list.findIndex((f) => f.modelo_nombre.toLowerCase() === modeloNombre.toLowerCase());
 
     const nuevaFicha: FichaTecnicaModeloBOM = {
-      id: index !== -1 ? list[index].id : `bom-${Date.now()}`,
+      id: index !== -1 ? list[index].id : generarId('bom'),
       modelo_nombre: modeloNombre,
       receta,
       notas,
@@ -383,22 +422,7 @@ export class ProductionStore {
     const inventario = this.getInventarioCrudo();
 
     return ficha.receta.map((item) => {
-      let cantidadRequeridaTotal: number;
-      const unidadPar = (item.unidad_medida || 'pares').toUpperCase();
-      const unidadTotal = (item.consumo_total_unidad || item.unidad_medida || 'pares').toUpperCase();
-
-      if (item.factor_conversion !== undefined && item.factor_conversion > 0) {
-        cantidadRequeridaTotal = Number((item.cantidad_por_par * totalPares * item.factor_conversion).toFixed(2));
-      } else if (unidadPar === 'DCM' && unidadTotal === 'MT') {
-        // En calzado ~135 dm² = 1 metro lineal de sintético/piel
-        cantidadRequeridaTotal = Number(((item.cantidad_por_par * totalPares) / 135).toFixed(2));
-      } else if (unidadPar === 'CM' && unidadTotal === 'MT') {
-        cantidadRequeridaTotal = Number(((item.cantidad_por_par * totalPares) / 100).toFixed(2));
-      } else if (unidadPar === 'PIEZA' && unidadTotal === 'MILLAR') {
-        cantidadRequeridaTotal = Number(((item.cantidad_por_par * totalPares) / 1000).toFixed(2));
-      } else {
-        cantidadRequeridaTotal = Number((item.cantidad_por_par * totalPares).toFixed(2));
-      }
+      const cantidadRequeridaTotal = calcularCantidadRequeridaItem(item, totalPares);
 
       // Buscar coincidencia en inventario por nombre de material
       const invMatches = inventario.filter((inv) =>
@@ -407,7 +431,11 @@ export class ProductionStore {
 
       const stockActual = invMatches.reduce((sum, inv) => sum + inv.cantidad_total, 0);
       const diferenciaStock = stockActual - cantidadRequeridaTotal;
-      const suficiente = stockActual >= cantidadRequeridaTotal || stockActual > 0;
+      const suficiente = stockActual >= cantidadRequeridaTotal;
+
+      // Calcular costo del material
+      const costoUnit = item.costo_unitario || 0;
+      const costoMaterialTotal = Number((costoUnit * cantidadRequeridaTotal).toFixed(2));
 
       return {
         pieza: item.pieza || 'GENERAL',
@@ -420,6 +448,8 @@ export class ProductionStore {
         diferencia_stock: diferenciaStock,
         suficiente,
         seccion: item.seccion || 'corte',
+        costo_unitario: costoUnit > 0 ? costoUnit : undefined,
+        costo_material_total: costoUnit > 0 ? costoMaterialTotal : undefined,
       };
     });
   }
@@ -469,7 +499,7 @@ export class ProductionStore {
         }
       } else {
         // Descuento global por volumen de consumibles (ej. Pegamento, Forro, Hilo)
-        let porDescontar = Number((item.cantidad_por_par * totalPares).toFixed(2));
+        let porDescontar = calcularCantidadRequeridaItem(item, totalPares);
         const cantidadTotalDescontada = porDescontar;
 
         for (const inv of inventario) {
@@ -516,7 +546,7 @@ export class ProductionStore {
     const folio = `LOT-2026-${String(numLote).padStart(3, '0')}`;
 
     const nuevoLote: LoteProduccion = {
-      id: `lote-${Date.now()}`,
+      id: generarId('lote'),
       folio,
       modelo: input.modelo,
       total_pares: totalPares,
@@ -535,7 +565,7 @@ export class ProductionStore {
     // Registro inicial en historial
     const historial = this.getHistorialMovimientos();
     historial.unshift({
-      id: `mov-${Date.now()}`,
+      id: generarId('mov'),
       lote_id: nuevoLote.id,
       etapa_origen: 'Corte',
       etapa_destino: 'Corte',
@@ -581,7 +611,7 @@ export class ProductionStore {
     // Historial
     const historial = this.getHistorialMovimientos();
     historial.unshift({
-      id: `mov-${Date.now()}`,
+      id: generarId('mov'),
       lote_id: input.lote_id,
       etapa_origen: etapaOrigen,
       etapa_destino: input.nueva_etapa,
@@ -629,7 +659,7 @@ export class ProductionStore {
   static crearMaquilero(nombre: string, tarifa_por_par: number): Maquilero {
     const list = this.getMaquileros();
     const nuevo: Maquilero = {
-      id: `mq-${Date.now()}`,
+      id: generarId('mq'),
       nombre: nombre.trim(),
       tarifa_por_par: Math.max(0, tarifa_por_par),
     };
@@ -662,13 +692,13 @@ export class ProductionStore {
     let nuevo: ModeloCalzado;
     if (typeof input === 'string') {
       nuevo = {
-        id: `mod-${Date.now()}`,
+        id: generarId('mod'),
         nombre: input.trim(),
         estilo: estiloParam ? estiloParam.trim() : undefined,
       };
     } else {
       nuevo = {
-        id: `mod-${Date.now()}`,
+        id: generarId('mod'),
         nombre: input.nombre.trim(),
         horma: input.horma ? input.horma.trim() : undefined,
         linea: input.linea ? input.linea.trim() : undefined,
@@ -708,16 +738,18 @@ export class ProductionStore {
     talla: number,
     cantidad_total: number,
     unidad_medida?: string,
-    seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general'
+    seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general',
+    costo_unitario?: number
   ): InventarioCrudo {
     const list = this.getInventarioCrudo();
     const nuevo: InventarioCrudo = {
-      id: `inv-${Date.now()}`,
+      id: generarId('inv'),
       tipo_material: tipo_material.trim(),
       talla: Math.max(0, talla),
       cantidad_total: Math.max(0, cantidad_total),
       unidad_medida: unidad_medida || 'unidades',
       seccion: seccion || 'general',
+      costo_unitario: costo_unitario && costo_unitario > 0 ? costo_unitario : undefined,
     };
     list.unshift(nuevo);
     setStoredData(STORAGE_KEYS.INVENTARIO, list);
@@ -781,7 +813,7 @@ export class ProductionStore {
       if (item.pares <= 0) continue;
 
       const nuevoDetalle: OrdenSalidaDetalle = {
-        id: `dt-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        id: generarId('dt'),
         orden_id: ordenId,
         talla: item.talla,
         pares_enviados: item.pares,
@@ -812,7 +844,7 @@ export class ProductionStore {
     const folioLote = `LOT-2026-${String(numLote).padStart(3, '0')}`;
 
     const nuevoLote: LoteProduccion = {
-      id: `lote-${Date.now()}`,
+      id: generarId('lote'),
       folio: folioLote,
       modelo: input.modelo,
       total_pares: totalPares,
@@ -830,7 +862,7 @@ export class ProductionStore {
     // Registro en Historial de Movimientos de Producción
     const historial = this.getHistorialMovimientos();
     historial.unshift({
-      id: `mov-${Date.now()}`,
+      id: generarId('mov'),
       lote_id: nuevoLote.id,
       etapa_origen: 'Corte',
       etapa_destino: 'Corte',
@@ -864,7 +896,7 @@ export class ProductionStore {
     if (modelosSet.size === 0) {
       const modelosCat = this.getModelos().map((m) => m.nombre);
       return {
-        modelos: modelosCat.length > 0 ? modelosCat : ['Frozen', 'Carol', 'Carmin', 'Stiletto Verona'],
+        modelos: modelosCat.length > 0 ? modelosCat : ['MODELO 01 - 2026', 'MODELO 02', 'MODELO 03', 'MODELO 04'],
         tallasCerradas: [22, 23, 24, 25, 26, 27],
       };
     }
@@ -994,7 +1026,7 @@ export class ProductionStore {
 
       if (!ordenMatch) {
         ordenMatch = {
-          id: `ORD-2026-${Date.now().toString().slice(-3)}`,
+          id: `ORD-2026-${String(ordenes.length + 1).padStart(3, '0')}`,
           maquilero_id: input.maquilero_id,
           modelo: item.modelo,
           fecha_envio: new Date().toISOString().split('T')[0],
@@ -1009,7 +1041,7 @@ export class ProductionStore {
 
       if (!dtMatch) {
         dtMatch = {
-          id: `dt-auto-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          id: generarId('dt-auto'),
           orden_id: ordenMatch.id,
           talla: item.talla,
           pares_enviados: item.pares_completos + item.faltantes_izq + item.faltantes_der + (item.mermas_totales || 0),
@@ -1027,7 +1059,7 @@ export class ProductionStore {
       if (esAlertaItem) contieneAlerta = true;
 
       const nuevaRecepcion: Recepcion = {
-        id: `rec-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        id: generarId('rec'),
         orden_detalle_id: dtMatch.id,
         fecha_recepcion: new Date().toISOString(),
         pares_completos_entregados: item.pares_completos,
@@ -1053,11 +1085,54 @@ export class ProductionStore {
     setStoredData(STORAGE_KEYS.DETALLES, detalles);
     setStoredData(STORAGE_KEYS.RECEPCIONES, recepciones);
 
+    // Cerrar la orden (estatus 'Completado') cuando ya se recibio o justifico
+    // todo lo enviado; asi el tablero deja de contarla como envio pendiente.
+    const detallesGuardados = this.getOrdenesDetalle();
+    const recepcionesGuardadas = this.getRecepciones();
+    let ordenesCambiadas = false;
+
+    for (const orden of ordenes) {
+      const detallesOrden = detallesGuardados.filter((d) => d.orden_id === orden.id);
+      if (detallesOrden.length === 0) continue;
+
+      const completa = detallesOrden.every((dt) => {
+        const acumulado = recepcionesGuardadas
+          .filter((r) => r.orden_detalle_id === dt.id)
+          .reduce(
+            (acc, r) =>
+              acc +
+              r.pares_completos_entregados +
+              r.faltantes_izquierdos +
+              r.faltantes_derechos +
+              (r.pares_segunda || 0) +
+              (r.mermas_totales || 0),
+            0
+          );
+        return acumulado >= dt.pares_enviados;
+      });
+
+      const nuevoEstatus = completa ? 'Completado' : 'Pendiente';
+      if (orden.estatus !== nuevoEstatus) {
+        orden.estatus = nuevoEstatus;
+        ordenesCambiadas = true;
+      }
+    }
+
+    if (ordenesCambiadas) {
+      setStoredData(STORAGE_KEYS.ORDENES, ordenes);
+    }
+
     // Sincronizar actualización de Lote WIP en /procesos a 'Producto Terminado'
     const lotes = this.getLotesProduccion();
     let lotesCambiados = false;
 
     for (const item of input.items) {
+      const ordenItem = ordenes.find(
+        (o) => o.maquilero_id === input.maquilero_id && o.modelo === item.modelo
+      );
+      // El lote pasa a Producto Terminado solo cuando la orden ya quedo completa
+      if (!ordenItem || ordenItem.estatus !== 'Completado') continue;
+
       const loteMatch = lotes.find(
         (l) =>
           l.modelo.toLowerCase() === item.modelo.toLowerCase() &&
@@ -1094,11 +1169,8 @@ export class ProductionStore {
     const detallesFiltrados = detalles.filter((d) => ordenesIds.has(d.orden_id));
     const detallesMap = new Map(detallesFiltrados.map((d) => [d.id, d]));
 
-    const inicio = new Date(fechaInicio);
-    inicio.setHours(0, 0, 0, 0);
-
-    const fin = new Date(fechaFin);
-    fin.setHours(23, 59, 59, 999);
+    const inicio = parseFechaHoraLocal(fechaInicio, false);
+    const fin = parseFechaHoraLocal(fechaFin, true);
 
     const items: CorteSabatinoItem[] = [];
     const incidencias: ResumenCorteSabatino['incidencias'] = [];
@@ -1157,6 +1229,38 @@ export class ProductionStore {
       }
     }
 
+    // --- INTEGRACIÓN: FORRADO DE PLANTA ---
+    const ticketsForrado = this.getTicketsForrado().filter(t => t.maquilero_id === maquileroId);
+    const ticketsForradoIds = new Set(ticketsForrado.map(t => t.id));
+    const recepcionesForrado = this.getRecepcionesForrado().filter(r => ticketsForradoIds.has(r.ticket_id));
+
+    for (const rec of recepcionesForrado) {
+      const recDate = parseFechaHoraLocal(rec.fecha, false);
+      if (recDate >= inicio && recDate <= fin) {
+        const ticket = ticketsForrado.find(t => t.id === rec.ticket_id);
+        const subtotal = rec.pares_recibidos * maquilero.tarifa_por_par;
+
+        totalParesCompletos += rec.pares_recibidos;
+
+        items.push({
+          recepcion_id: rec.id,
+          fecha: rec.fecha,
+          modelo: 'FORRADO DE PLANTA',
+          talla: 0,
+          pares_completos: rec.pares_recibidos,
+          faltantes_izq: 0,
+          faltantes_der: 0,
+          pares_segunda: 0,
+          mermas_totales: 0,
+          cargo_maquilero_mxn: 0,
+          tarifa_unitaria: maquilero.tarifa_por_par,
+          subtotal_pagar: subtotal,
+          nota: rec.notas || `Ticket ${ticket?.folio}`,
+        });
+      }
+    }
+    // ----------------------------------------
+
     const totalPagarMXN = Math.max(0, totalParesCompletos * maquilero.tarifa_por_par - totalCargosQCMXN);
 
     return {
@@ -1189,14 +1293,14 @@ export class ProductionStore {
     return list.sort((a, b) => new Date(b.fecha_guardado).getTime() - new Date(a.fecha_guardado).getTime());
   }
 
-  static guardarTicketPagoSemanal(resumen: ResumenPagoSemanal): TicketPagoSemanalGuardado {
+  static guardarTicketPagoSemanal(resumen: ResumenPagoSemanal & { estado?: 'POR_PAGAR' | 'PAGADO' }): TicketPagoSemanalGuardado {
     const tickets = this.getTicketsPagoSemanal();
     const count = tickets.length + 1;
     const year = new Date().getFullYear();
     const folioStr = String(count).padStart(3, '0');
     
     const nuevoTicket: TicketPagoSemanalGuardado = {
-      id: `ticket-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      id: generarId('ticket'),
       folio: `TCK-${year}-${folioStr}`,
       fecha_guardado: new Date().toISOString(),
       maquilero_id: resumen.maquilero.id,
@@ -1206,7 +1310,11 @@ export class ProductionStore {
       fecha_fin: resumen.fecha_fin,
       total_pares_completos: resumen.total_pares_completos,
       total_faltantes_piezas: resumen.total_faltantes_piezas,
+      total_pares_segunda: resumen.total_pares_segunda || 0,
+      total_mermas: resumen.total_mermas || 0,
+      total_cargos_qc_mxn: resumen.total_cargos_qc_mxn || 0,
       total_pagar_mxn: resumen.total_pagar_mxn,
+      estado: resumen.estado || 'POR_PAGAR',
       items: resumen.items,
       incidencias: resumen.incidencias,
     };
@@ -1219,6 +1327,16 @@ export class ProductionStore {
   static eliminarTicketPagoSemanal(id: string): void {
     const tickets = this.getTicketsPagoSemanal().filter((t) => t.id !== id);
     setStoredData(STORAGE_KEYS.TICKETS_PAGOS, tickets);
+  }
+
+  static actualizarEstadoTicket(id: string, nuevoEstado: 'POR_PAGAR' | 'PAGADO'): TicketPagoSemanalGuardado | null {
+    const tickets = this.getTicketsPagoSemanal();
+    const index = tickets.findIndex(t => t.id === id);
+    if (index === -1) return null;
+    
+    tickets[index].estado = nuevoEstado;
+    setStoredData(STORAGE_KEYS.TICKETS_PAGOS, tickets);
+    return tickets[index];
   }
 
   // GESTIÓN DE PEDIDOS DE CLIENTES / FÁBRICA Y LOTES DE PRODUCCIÓN
@@ -1238,7 +1356,7 @@ export class ProductionStore {
     const totalPares = input.desglose_tallas.reduce((sum, item) => sum + Math.max(0, item.pares), 0);
 
     const nuevoPedido: PedidoCliente = {
-      id: `ped-${Date.now()}`,
+      id: generarId('ped'),
       folio: `PED-${year}-${String(count).padStart(3, '0')}`,
       cliente: input.cliente.trim(),
       modelo: input.modelo.trim(),
@@ -1284,7 +1402,7 @@ export class ProductionStore {
     const year = new Date().getFullYear();
 
     const nuevaSalida: SalidaGeneral = {
-      id: `sg-${Date.now()}`,
+      id: generarId('sg'),
       folio: `SG-${year}-${String(count).padStart(3, '0')}`,
       fecha: new Date().toISOString().split('T')[0],
       tipo_material: input.tipo_material.trim(),
@@ -1324,12 +1442,275 @@ export class ProductionStore {
       localStorage.removeItem(key);
       localStorage.setItem(key, JSON.stringify([]));
     });
+    // Se restauran los catalogos base (modelos, recetas de materiales, inventario
+    // y proveedores) para que el sistema siga siendo utilizable despues de limpiar
+    // los datos de prueba; de lo contrario la Explosion de Materiales quedaria vacia.
+    localStorage.setItem(STORAGE_KEYS.MODELOS, JSON.stringify(INITIAL_MODELOS));
+    localStorage.setItem(STORAGE_KEYS.FICHAS_TECNICAS_BOM, JSON.stringify(INITIAL_FICHAS_TECNICAS_BOM));
+    localStorage.setItem(STORAGE_KEYS.INVENTARIO, JSON.stringify(INITIAL_INVENTARIO_CRUDO));
+    localStorage.setItem(STORAGE_KEYS.PROVEEDORES, JSON.stringify(INITIAL_PROVEEDORES));
     localStorage.setItem('calzado_pwa_system_wiped_clean_v1', 'true');
   }
 
   static resetToDefault(): void {
     this.clearAllData();
   }
+
+  // ========================================
+  // PROVEEDORES DE MATERIA PRIMA
+  // ========================================
+  static getProveedores(): Proveedor[] {
+    return getStoredData(STORAGE_KEYS.PROVEEDORES, INITIAL_PROVEEDORES);
+  }
+
+  static crearProveedor(input: {
+    nombre: string;
+    contacto?: string;
+    telefono?: string;
+    materiales_que_surte?: string;
+    notas?: string;
+  }): Proveedor {
+    const list = this.getProveedores();
+    const nuevo: Proveedor = {
+      id: generarId('prov'),
+      nombre: input.nombre.trim(),
+      contacto: input.contacto ? input.contacto.trim() : undefined,
+      telefono: input.telefono ? input.telefono.trim() : undefined,
+      materiales_que_surte: input.materiales_que_surte ? input.materiales_que_surte.trim() : undefined,
+      notas: input.notas ? input.notas.trim() : undefined,
+    };
+    list.unshift(nuevo);
+    setStoredData(STORAGE_KEYS.PROVEEDORES, list);
+    return nuevo;
+  }
+
+  static eliminarProveedor(id: string): void {
+    const list = this.getProveedores().filter((p) => p.id !== id);
+    setStoredData(STORAGE_KEYS.PROVEEDORES, list);
+  }
+
+  // ========================================
+  // ÓRDENES DE COMPRA
+  // ========================================
+  static getOrdenesCompra(): OrdenCompra[] {
+    return getStoredData(STORAGE_KEYS.ORDENES_COMPRA, []);
+  }
+
+  static crearOrdenCompra(input: {
+    proveedor_id: string;
+    proveedor_nombre: string;
+    items: OrdenCompraItem[];
+    notas?: string;
+  }): OrdenCompra {
+    const list = this.getOrdenesCompra();
+    const count = list.length + 1;
+    const year = new Date().getFullYear();
+
+    const totalEstimado = input.items.reduce((sum, it) => sum + (it.costo_total || 0), 0);
+
+    const nuevaOC: OrdenCompra = {
+      id: generarId('oc'),
+      folio: `OC-${year}-${String(count).padStart(3, '0')}`,
+      fecha: new Date().toISOString().split('T')[0],
+      proveedor_id: input.proveedor_id,
+      proveedor_nombre: input.proveedor_nombre,
+      estatus: 'Pendiente',
+      items: input.items,
+      total_estimado_mxn: totalEstimado,
+      notas: input.notas ? input.notas.trim() : undefined,
+    };
+
+    list.unshift(nuevaOC);
+    setStoredData(STORAGE_KEYS.ORDENES_COMPRA, list);
+    return nuevaOC;
+  }
+
+  static eliminarOrdenCompra(id: string): void {
+    const list = this.getOrdenesCompra().filter((oc) => oc.id !== id);
+    setStoredData(STORAGE_KEYS.ORDENES_COMPRA, list);
+  }
+
+  static generarOrdenCompraDesdeExplosion(
+    faltantes: ResultadoExplosionMateriales[],
+    proveedor_id: string,
+    proveedor_nombre: string
+  ): OrdenCompra {
+    const items: OrdenCompraItem[] = faltantes
+      .filter((f) => !f.suficiente || f.diferencia_stock < 0)
+      .map((f) => ({
+        material_nombre: f.material_nombre,
+        cantidad_requerida: Math.abs(f.diferencia_stock),
+        unidad_medida: f.unidad_medida_total,
+        costo_unitario: f.costo_unitario || 0,
+        costo_total: Number(((f.costo_unitario || 0) * Math.abs(f.diferencia_stock)).toFixed(2)),
+      }));
+
+    return this.crearOrdenCompra({
+      proveedor_id,
+      proveedor_nombre,
+      items,
+      notas: `Generada automáticamente desde Explosión de Materiales`,
+    });
+  }
+
+  // ========================================
+  // PORCENTAJE DE CUMPLIMIENTO
+  // ========================================
+  static calcularCumplimientoGlobal(): {
+    porcentaje_entrega: number;
+    pares_terminados: number;
+    pares_totales: number;
+    lotes_terminados: number;
+    lotes_totales: number;
+  } {
+    const lotes = this.getLotesProduccion();
+    if (lotes.length === 0) {
+      return { porcentaje_entrega: 0, pares_terminados: 0, pares_totales: 0, lotes_terminados: 0, lotes_totales: 0 };
+    }
+
+    const paresTotales = lotes.reduce((sum, l) => sum + l.total_pares, 0);
+    const lotesTerminados = lotes.filter((l) => l.etapa_actual === 'Producto Terminado');
+    const paresTerminados = lotesTerminados.reduce((sum, l) => sum + l.total_pares, 0);
+    const porcentaje = paresTotales > 0 ? Math.round((paresTerminados / paresTotales) * 100) : 0;
+
+    return {
+      porcentaje_entrega: porcentaje,
+      pares_terminados: paresTerminados,
+      pares_totales: paresTotales,
+      lotes_terminados: lotesTerminados.length,
+      lotes_totales: lotes.length,
+    };
+  }
+
+  static calcularProgresoLote(lote: LoteProduccion): number {
+    const etapasOrden: EtapaProduccion[] = ['Corte', 'Pespunte', 'Forrado', 'Montado', 'Adornado', 'Producto Terminado'];
+    const idx = etapasOrden.indexOf(lote.etapa_actual);
+    if (idx === -1) return 0;
+    // Producto Terminado = 100%
+    return Math.round(((idx + 1) / etapasOrden.length) * 100);
+  }
+
+  // ========================================
+  // ALERTAS DE LOTES VENCIDOS
+  // ========================================
+  static getLotesVencidos(): (LoteProduccion & { dias_atraso: number; estatus_vencimiento: 'vencido' | 'por_vencer' | 'a_tiempo' })[] {
+    const lotes = this.getLotesProduccion();
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    return lotes
+      .filter((l) => l.etapa_actual !== 'Producto Terminado')
+      .map((l) => {
+        // Calcular fecha de entrega comprometida (fecha_inicio + 14 días por defecto para producción)
+        const fechaInicio = parseFechaHoraLocal(l.fecha_inicio, false);
+        const fechaEntregaEstimada = new Date(fechaInicio);
+        fechaEntregaEstimada.setDate(fechaEntregaEstimada.getDate() + 14); // 2 semanas estándar de producción
+
+        const diffMs = hoy.getTime() - fechaEntregaEstimada.getTime();
+        const diffDias = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        let estatus: 'vencido' | 'por_vencer' | 'a_tiempo' = 'a_tiempo';
+        if (diffDias > 0) {
+          estatus = 'vencido';
+        } else if (diffDias >= -3) {
+          estatus = 'por_vencer'; // 3 días antes de la fecha límite
+        }
+
+        return {
+          ...l,
+          dias_atraso: diffDias,
+          estatus_vencimiento: estatus,
+        };
+      })
+      .filter((l) => l.estatus_vencimiento !== 'a_tiempo')
+      .sort((a, b) => b.dias_atraso - a.dias_atraso);
+  }
+
+  // ========================================
+  // FORRADO DE PLANTA (MVP)
+  // ========================================
+
+  static getTicketsForrado(): TicketForrado[] {
+    return getStoredData(STORAGE_KEYS.TICKETS_FORRADO, INITIAL_TICKETS_FORRADO);
+  }
+
+  static getRecepcionesForrado(): RecepcionForrado[] {
+    return getStoredData(STORAGE_KEYS.RECEPCIONES_FORRADO, INITIAL_RECEPCIONES_FORRADO);
+  }
+
+  static crearTicketForrado(input: {
+    maquilero_id: string;
+    pares_enviados: number;
+    pegamento_consumido: number;
+    forro_consumido: number;
+    notas?: string;
+  }): TicketForrado {
+    const list = this.getTicketsForrado();
+    const num = list.length + 1;
+    const folio = `FOR-2026-${String(num).padStart(3, '0')}`;
+
+    const maq = this.getMaquileros().find((m) => m.id === input.maquilero_id);
+    const maquilero_nombre = maq ? maq.nombre : 'Desconocido';
+
+    const nuevo: TicketForrado = {
+      id: generarId('for'),
+      folio,
+      fecha: new Date().toISOString().split('T')[0],
+      maquilero_id: input.maquilero_id,
+      maquilero_nombre,
+      pares_enviados: input.pares_enviados,
+      pares_recibidos: 0,
+      pegamento_consumido: input.pegamento_consumido,
+      forro_consumido: input.forro_consumido,
+      estatus: 'Pendiente',
+      notas: input.notas,
+      creado_en: new Date().toISOString(),
+    };
+
+    list.unshift(nuevo);
+    setStoredData(STORAGE_KEYS.TICKETS_FORRADO, list);
+    return nuevo;
+  }
+
+  static recibirPlantaForrada(ticketId: string, pares_recibir: number, notas?: string): {
+    exito: boolean;
+    ticket?: TicketForrado;
+    error?: string;
+  } {
+    const tickets = this.getTicketsForrado();
+    const index = tickets.findIndex((t) => t.id === ticketId);
+    if (index === -1) return { exito: false, error: 'Ticket no encontrado' };
+
+    const ticket = tickets[index];
+    const paresRestantes = ticket.pares_enviados - ticket.pares_recibidos;
+
+    if (pares_recibir <= 0 || pares_recibir > paresRestantes) {
+      return { exito: false, error: 'Cantidad inválida o excede los pares faltantes' };
+    }
+
+    ticket.pares_recibidos += pares_recibir;
+    if (ticket.pares_recibidos >= ticket.pares_enviados) {
+      ticket.estatus = 'Completado';
+    } else {
+      ticket.estatus = 'Parcial';
+    }
+
+    // Guardar ticket
+    tickets[index] = ticket;
+    setStoredData(STORAGE_KEYS.TICKETS_FORRADO, tickets);
+
+    // Crear registro de recepción parcial
+    const recepciones = this.getRecepcionesForrado();
+    recepciones.unshift({
+      id: generarId('rec-for'),
+      ticket_id: ticketId,
+      fecha: new Date().toISOString().split('T')[0],
+      pares_recibidos: pares_recibir,
+      notas,
+      creado_en: new Date().toISOString(),
+    });
+    setStoredData(STORAGE_KEYS.RECEPCIONES_FORRADO, recepciones);
+
+    return { exito: true, ticket };
+  }
 }
-
-

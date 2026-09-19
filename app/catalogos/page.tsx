@@ -22,6 +22,7 @@ import {
   FichaTecnicaModeloBOM,
   ItemRecetaBOM,
   UnidadMedidaInsumo,
+  Proveedor,
 } from '@/types/database';
 import { formatMXN } from '@/lib/utils';
 import {
@@ -51,13 +52,14 @@ const TALLAS_DESPLEGABLES = [
 const PRESETS_CONSUMO = [0.50, 1.00, 2.00, 4.32, 5.40, 6.89, 10.00, 20.00, 30.00];
 
 export default function CatalogosPage() {
-  const [activeTab, setActiveTab] = useState<'modelos' | 'recetas' | 'insumos' | 'maquileros' | 'pedidos'>('modelos');
+  const [activeTab, setActiveTab] = useState<'modelos' | 'recetas' | 'insumos' | 'maquileros' | 'pedidos' | 'proveedores'>('modelos');
 
   const [modelos, setModelos] = useState<ModeloCalzado[]>([]);
   const [maquileros, setMaquileros] = useState<Maquilero[]>([]);
   const [inventario, setInventario] = useState<InventarioCrudo[]>([]);
   const [pedidos, setPedidos] = useState<PedidoCliente[]>([]);
   const [fichasTecnicas, setFichasTecnicas] = useState<FichaTecnicaModeloBOM[]>([]);
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
 
   // Filtros
   const [busquedaMaterial, setBusquedaMaterial] = useState<string>('');
@@ -75,7 +77,7 @@ export default function CatalogosPage() {
   const [modTroquel, setModTroquel] = useState<string>(TROQUELES_PREDEFINIDOS[0]);
 
   // FORMULARIO RECETA BOM (CON SELECTS)
-  const [selectedBOMModelo, setSelectedBOMModelo] = useState<string>('HELLEN - 3596');
+  const [selectedBOMModelo, setSelectedBOMModelo] = useState<string>('MODELO 01 - 2026');
   const [nuevoItemPieza, setNuevoItemPieza] = useState<string>(PIEZAS_CALZADO_PREDEFINIDAS[0]);
   const [nuevoMaterialNombre, setNuevoMaterialNombre] = useState<string>('');
   const [nuevoMaterialCantidad, setNuevoMaterialCantidad] = useState<string>('1.0');
@@ -90,10 +92,17 @@ export default function CatalogosPage() {
   const [nuevoInsumoCantidad, setNuevoInsumoCantidad] = useState<string>('100');
   const [nuevoInsumoUnidad, setNuevoInsumoUnidad] = useState<string>('MT');
   const [nuevoInsumoSeccion, setNuevoInsumoSeccion] = useState<'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general'>('corte');
+  const [nuevoInsumoCosto, setNuevoInsumoCosto] = useState<string>('');
 
   // FORMULARIO MAQUILEROS
   const [nuevoMaquileroNombre, setNuevoMaquileroNombre] = useState<string>('');
   const [nuevoMaquileroTarifa, setNuevoMaquileroTarifa] = useState<string>('');
+
+  // FORMULARIO PROVEEDORES
+  const [nuevoProvNombre, setNuevoProvNombre] = useState<string>('');
+  const [nuevoProvContacto, setNuevoProvContacto] = useState<string>('');
+  const [nuevoProvTelefono, setNuevoProvTelefono] = useState<string>('');
+  const [nuevoProvMateriales, setNuevoProvMateriales] = useState<string>('');
 
   // FORMULARIO PEDIDOS (CON SELECTS)
   const [nuevoClienteNombre, setNuevoClienteNombre] = useState<string>(CLIENTES_PREDEFINIDOS[0]);
@@ -116,6 +125,7 @@ export default function CatalogosPage() {
     setMaquileros(ProductionStore.getMaquileros());
     setInventario(listInv);
     setPedidos(ProductionStore.getPedidosCliente());
+    setProveedores(ProductionStore.getProveedores());
 
     const fichas = ProductionStore.getFichasTecnicasBOM();
     setFichasTecnicas(fichas);
@@ -265,16 +275,19 @@ export default function CatalogosPage() {
     if (!nuevoInsumoNombre.trim()) return;
 
     const cantidadNum = parseFloat(nuevoInsumoCantidad) || 0;
+    const costoNum = parseFloat(nuevoInsumoCosto) || 0;
 
     ProductionStore.agregarInsumoInventario(
       nuevoInsumoNombre,
       nuevoInsumoTalla,
       cantidadNum,
       nuevoInsumoUnidad,
-      nuevoInsumoSeccion
+      nuevoInsumoSeccion,
+      costoNum > 0 ? costoNum : undefined
     );
 
     setNuevoInsumoCantidad('100');
+    setNuevoInsumoCosto('');
     cargarDatos();
     setMensaje(`Material "${nuevoInsumoNombre}" registrado en el almacén.`);
     setTimeout(() => setMensaje(null), 2500);
@@ -339,6 +352,34 @@ export default function CatalogosPage() {
   const handleEliminarPedido = (id: string, folio: string) => {
     if (confirm(`¿Eliminar el pedido ${folio}?`)) {
       ProductionStore.eliminarPedidoCliente(id);
+      cargarDatos();
+    }
+  };
+
+  // GESTION DE PROVEEDORES
+  const handleCrearProveedor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nuevoProvNombre.trim()) return;
+
+    ProductionStore.crearProveedor({
+      nombre: nuevoProvNombre,
+      contacto: nuevoProvContacto || undefined,
+      telefono: nuevoProvTelefono || undefined,
+      materiales_que_surte: nuevoProvMateriales || undefined,
+    });
+
+    setNuevoProvNombre('');
+    setNuevoProvContacto('');
+    setNuevoProvTelefono('');
+    setNuevoProvMateriales('');
+    cargarDatos();
+    setMensaje('Proveedor registrado correctamente.');
+    setTimeout(() => setMensaje(null), 2500);
+  };
+
+  const handleEliminarProveedor = (id: string, nombre: string) => {
+    if (confirm(`¿Eliminar proveedor "${nombre}"?`)) {
+      ProductionStore.eliminarProveedor(id);
       cargarDatos();
     }
   };
@@ -426,6 +467,16 @@ export default function CatalogosPage() {
           >
             Pedidos ({pedidos.length})
           </button>
+          <button
+            onClick={() => setActiveTab('proveedores')}
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+              activeTab === 'proveedores'
+                ? 'bg-blue-700 text-white shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
+          >
+            Proveedores ({proveedores.length})
+          </button>
         </div>
       </div>
 
@@ -471,7 +522,7 @@ export default function CatalogosPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Ej. HELLEN - 3596, Frozen, Carol..."
+                  placeholder="Ej. MODELO 01 - 2026, MODELO 02, MODELO 03..."
                   value={modNombre}
                   onChange={(e) => handleAutoGenerarEstilo(e.target.value, modMoldura)}
                   className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 focus:border-blue-600 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm font-bold focus:outline-none"
@@ -546,10 +597,10 @@ export default function CatalogosPage() {
                 </select>
               </div>
 
-              {/* TROQUEL DESPLEGABLE */}
+              {/* GRABADO / DISEÑO DESPLEGABLE */}
               <div>
                 <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1">
-                  Especificacion Troquel NOM 20 (Desplegable)
+                  Especificación de Grabado / Diseño
                 </label>
                 <select
                   value={modTroquel}
@@ -816,7 +867,7 @@ export default function CatalogosPage() {
                     <option value="corte">Corte y Forros</option>
                     <option value="suela_planta_tacon">Suela / Planta / Tacon</option>
                     <option value="empaque">Empaque y Cajas</option>
-                    <option value="troquel">Troquel / Grabado</option>
+                    <option value="troquel">Grabado / Diseño</option>
                   </select>
                 </div>
               </div>
@@ -1026,10 +1077,26 @@ export default function CatalogosPage() {
                     <option value="corte">Corte y Forros</option>
                     <option value="suela_planta_tacon">Suela/Planta/Tacon</option>
                     <option value="empaque">Empaque y Cajas</option>
-                    <option value="troquel">Troquel</option>
+                    <option value="troquel">Grabado</option>
                     <option value="general">General / Quimicos</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1">
+                  Precio por Unidad ($ MXN) — Opcional
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Ej. 280.00"
+                  value={nuevoInsumoCosto}
+                  onChange={(e) => setNuevoInsumoCosto(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm font-mono font-bold focus:outline-none"
+                />
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">Precio del material por unidad de medida (MT, PAR, PIEZA, etc.)</p>
               </div>
 
               <button
@@ -1088,6 +1155,7 @@ export default function CatalogosPage() {
                     <th className="py-2.5 px-2 text-center">Talla</th>
                     <th className="py-2.5 px-2 text-center">Seccion</th>
                     <th className="py-2.5 px-3 text-right">Stock Actual</th>
+                    <th className="py-2.5 px-2 text-right">Costo $</th>
                     <th className="py-2.5 px-3 text-right">Ajuste Rapido</th>
                     <th className="py-2.5 px-2 text-right">Accion</th>
                   </tr>
@@ -1108,6 +1176,9 @@ export default function CatalogosPage() {
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono font-black text-blue-700 dark:text-blue-400 text-sm">
                         {inv.cantidad_total} {inv.unidad_medida || 'unidades'}
+                      </td>
+                      <td className="py-2.5 px-2 text-right font-mono text-xs text-slate-600 dark:text-zinc-300">
+                        {inv.costo_unitario ? formatMXN(inv.costo_unitario) : <span className="text-slate-300 dark:text-zinc-600">—</span>}
                       </td>
                       <td className="py-2.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-1 font-mono text-xs">
@@ -1332,6 +1403,118 @@ export default function CatalogosPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 6: PROVEEDORES DE MATERIA PRIMA                     */}
+      {/* ======================================================== */}
+      {activeTab === 'proveedores' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-2.5">
+              <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" /> Registrar Proveedor
+            </h2>
+            <form onSubmit={handleCrearProveedor} className="space-y-4">
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1.5">
+                  Nombre del Proveedor *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Pieles del Bajío S.A."
+                  value={nuevoProvNombre}
+                  onChange={(e) => setNuevoProvNombre(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 focus:border-blue-600 text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 text-sm font-semibold focus:outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1.5">
+                  Persona de Contacto
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Carlos Martínez"
+                  value={nuevoProvContacto}
+                  onChange={(e) => setNuevoProvContacto(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 focus:border-blue-600 text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 text-sm focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1.5">
+                  Teléfono
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Ej. 477-123-4567"
+                  value={nuevoProvTelefono}
+                  onChange={(e) => setNuevoProvTelefono(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 focus:border-blue-600 text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 text-sm font-mono focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1.5">
+                  Materiales que Surte
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Pieles, Charol, Sintéticos"
+                  value={nuevoProvMateriales}
+                  onChange={(e) => setNuevoProvMateriales(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 focus:border-blue-600 text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 text-sm focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold uppercase transition-colors shadow"
+              >
+                Guardar Proveedor
+              </button>
+            </form>
+          </div>
+
+          <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase border-b border-slate-200 dark:border-zinc-800 pb-2.5">
+              Directorio de Proveedores
+            </h2>
+            {proveedores.length === 0 ? (
+              <div className="py-10 text-center text-sm text-slate-500">No hay proveedores registrados.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs sm:text-sm text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 font-mono text-xs uppercase">
+                      <th className="py-3 px-3 font-semibold">Nombre</th>
+                      <th className="py-3 px-3 font-semibold">Contacto</th>
+                      <th className="py-3 px-3 font-semibold">Teléfono</th>
+                      <th className="py-3 px-3 font-semibold">Materiales</th>
+                      <th className="py-3 px-2 text-right font-semibold">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
+                    {proveedores.map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
+                        <td className="py-3 px-3 text-slate-900 dark:text-white font-bold">{p.nombre}</td>
+                        <td className="py-3 px-3 text-slate-600 dark:text-zinc-300">{p.contacto || '—'}</td>
+                        <td className="py-3 px-3 font-mono text-slate-600 dark:text-zinc-300">{p.telefono || '—'}</td>
+                        <td className="py-3 px-3 text-xs text-slate-500 dark:text-zinc-400">{p.materiales_que_surte || '—'}</td>
+                        <td className="py-3 px-2 text-right">
+                          <button
+                            onClick={() => handleEliminarProveedor(p.id, p.nombre)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
+                            title="Eliminar proveedor"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

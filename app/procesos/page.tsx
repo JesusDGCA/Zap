@@ -49,7 +49,7 @@ export default function ProcesosPage() {
 
   // Modal para crear nuevo lote
   const [modalNuevoLote, setModalNuevoLote] = useState<boolean>(false);
-  const [nuevoModelo, setNuevoModelo] = useState<string>('HELLEN - 3596');
+  const [nuevoModelo, setNuevoModelo] = useState<string>('MODELO 01 - 2026');
   const [nuevoNotas, setNuevoNotas] = useState<string>('');
   const [tallasLote, setTallasLote] = useState<{ [talla: number]: number }>({
     22: 0,

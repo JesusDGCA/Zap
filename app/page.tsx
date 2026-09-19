@@ -15,9 +15,13 @@ import {
   CheckCircle2,
   PackageMinus,
   Factory,
+  TrendingUp,
+  AlertCircle,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
-import { OrdenSalidaConMaquilero, AlertaIncompletaView } from '@/types/database';
+import { OrdenSalidaConMaquilero, AlertaIncompletaView, LoteProduccion } from '@/types/database';
+
+type LoteVencido = LoteProduccion & { dias_atraso: number; estatus_vencimiento: 'vencido' | 'por_vencer' | 'a_tiempo' };
 
 export default function DashboardPage() {
   const [alertasCount, setAlertasCount] = useState<number>(0);
@@ -27,6 +31,10 @@ export default function DashboardPage() {
   const [totalLotesWIP, setTotalLotesWIP] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Nuevos estados para cumplimiento y alertas de vencimiento
+  const [cumplimiento, setCumplimiento] = useState({ porcentaje_entrega: 0, pares_terminados: 0, pares_totales: 0, lotes_terminados: 0, lotes_totales: 0 });
+  const [lotesVencidos, setLotesVencidos] = useState<LoteVencido[]>([]);
+
   useEffect(() => {
     const actAlertas = ProductionStore.getAlertasActivas();
     const actOrdenes = ProductionStore.getOrdenesPendientesConDetalle();
@@ -35,11 +43,16 @@ export default function DashboardPage() {
     const lotesActivos = lotes.filter((l) => l.etapa_actual !== 'Producto Terminado');
     const totalPares = lotesActivos.reduce((sum, l) => sum + l.total_pares, 0);
 
+    const cumplData = ProductionStore.calcularCumplimientoGlobal();
+    const vencidos = ProductionStore.getLotesVencidos();
+
     setAlertasCount(actAlertas.length);
     setAlertasActivas(actAlertas);
     setOrdenesPendientes(actOrdenes);
     setTotalParesWIP(totalPares);
     setTotalLotesWIP(lotesActivos.length);
+    setCumplimiento(cumplData);
+    setLotesVencidos(vencidos);
     setLoading(false);
   }, []);
 
@@ -54,6 +67,15 @@ export default function DashboardPage() {
 
   const totalParesEnTransito = ordenesPendientes.reduce((sum, ord) => sum + ord.total_pares_enviados, 0);
 
+  // Colores semáforo para el porcentaje de cumplimiento
+  const getCumplimientoColor = (pct: number) => {
+    if (pct >= 80) return { bg: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', bgLight: 'bg-emerald-100 dark:bg-emerald-950/40', border: 'border-emerald-200 dark:border-emerald-800' };
+    if (pct >= 50) return { bg: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', bgLight: 'bg-amber-50 dark:bg-amber-950/40', border: 'border-amber-200 dark:border-amber-800' };
+    return { bg: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400', bgLight: 'bg-rose-50 dark:bg-rose-950/40', border: 'border-rose-200 dark:border-rose-800' };
+  };
+
+  const cumplColor = getCumplimientoColor(cumplimiento.porcentaje_entrega);
+
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto">
       {/* ENCABEZADO PRINCIPAL */}
@@ -67,6 +89,94 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* ============================================ */}
+      {/* BARRA DE CUMPLIMIENTO GLOBAL (NUEVO)        */}
+      {/* ============================================ */}
+      <div className={`${cumplColor.bgLight} border ${cumplColor.border} rounded-2xl p-5 shadow-sm`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <TrendingUp className={`w-5 h-5 ${cumplColor.text}`} />
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase">
+              Cumplimiento de Producción
+            </h2>
+          </div>
+          <span className={`text-2xl sm:text-3xl font-extrabold font-mono ${cumplColor.text}`}>
+            {cumplimiento.porcentaje_entrega}%
+          </span>
+        </div>
+
+        {/* Barra de progreso visual */}
+        <div className="w-full bg-slate-200 dark:bg-zinc-800 rounded-full h-4 overflow-hidden mb-3">
+          <div
+            className={`${cumplColor.bg} h-4 rounded-full transition-all duration-700 ease-out`}
+            style={{ width: `${Math.min(100, cumplimiento.porcentaje_entrega)}%` }}
+          />
+        </div>
+
+        <div className="flex items-center justify-between text-xs sm:text-sm">
+          <span className="text-slate-600 dark:text-zinc-400">
+            <span className="font-bold text-slate-900 dark:text-white">{cumplimiento.pares_terminados}</span> de{' '}
+            <span className="font-bold text-slate-900 dark:text-white">{cumplimiento.pares_totales}</span> pares terminados
+          </span>
+          <span className="text-slate-600 dark:text-zinc-400">
+            <span className="font-bold text-slate-900 dark:text-white">{cumplimiento.lotes_terminados}</span> de{' '}
+            <span className="font-bold text-slate-900 dark:text-white">{cumplimiento.lotes_totales}</span> lotes completados
+          </span>
+        </div>
+      </div>
+
+      {/* ============================================ */}
+      {/* ALERTAS DE LOTES VENCIDOS (NUEVO)           */}
+      {/* ============================================ */}
+      {lotesVencidos.length > 0 && (
+        <div className="bg-rose-50 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-800 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center gap-2 pb-2 border-b border-rose-200 dark:border-rose-800">
+            <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 animate-pulse" />
+            <h2 className="text-sm sm:text-base font-bold text-rose-800 dark:text-rose-200 uppercase">
+              ⚠️ Lotes con Entrega Vencida ({lotesVencidos.length})
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {lotesVencidos.map((lote) => (
+              <div
+                key={lote.id}
+                className={`rounded-xl p-4 border ${
+                  lote.estatus_vencimiento === 'vencido'
+                    ? 'bg-rose-100 dark:bg-rose-950/50 border-rose-300 dark:border-rose-700'
+                    : 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-700'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className={`text-xs font-mono font-black uppercase px-2 py-0.5 rounded ${
+                      lote.estatus_vencimiento === 'vencido'
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-amber-500 text-white'
+                    }`}>
+                      {lote.estatus_vencimiento === 'vencido'
+                        ? `VENCIDO ${lote.dias_atraso} día${lote.dias_atraso !== 1 ? 's' : ''}`
+                        : `POR VENCER ${Math.abs(lote.dias_atraso)} día${Math.abs(lote.dias_atraso) !== 1 ? 's' : ''}`}
+                    </span>
+                    <p className="font-bold text-slate-900 dark:text-white text-sm mt-2">{lote.folio}</p>
+                    <p className="text-xs text-slate-600 dark:text-zinc-400">
+                      {lote.modelo} • {lote.total_pares} pares • Etapa: <span className="font-bold">{lote.etapa_actual}</span>
+                    </p>
+                  </div>
+                  <Link
+                    href="/procesos"
+                    className="p-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold transition-colors shrink-0"
+                    title="Ir a avanzar este lote"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 4 BOTONES GRANDES DE OPERACION PRINCIPAL (FACILES Y VISIBLES) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -219,7 +329,7 @@ export default function DashboardPage() {
       </div>
 
       {/* RESUMEN DE SITUACION ACTUAL DEL TALLER */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between shadow-sm">
           <div>
             <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase block">
@@ -263,6 +373,21 @@ export default function DashboardPage() {
             </span>
           </div>
           <AlertTriangle className={`w-8 h-8 ${alertasCount > 0 ? 'text-amber-500' : 'text-slate-400 dark:text-zinc-600'}`} />
+        </div>
+
+        <div className={`${lotesVencidos.length > 0 ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800' : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800'} border rounded-2xl p-4 flex items-center justify-between shadow-sm`}>
+          <div>
+            <span className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase block">
+              Lotes Vencidos
+            </span>
+            <span className={`text-2xl font-extrabold font-mono ${lotesVencidos.length > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
+              {lotesVencidos.length} lotes
+            </span>
+            <span className="text-xs text-slate-500 dark:text-zinc-400 block mt-0.5">
+              Con fecha de entrega pasada
+            </span>
+          </div>
+          <Clock className={`w-8 h-8 ${lotesVencidos.length > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-400 dark:text-zinc-600'}`} />
         </div>
       </div>
     </div>

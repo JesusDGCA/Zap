@@ -20,6 +20,7 @@ import {
   Calculator,
   Sun,
   Moon,
+  ClipboardList,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
 import { useTheme } from './ThemeProvider';
@@ -44,7 +45,7 @@ export default function Sidebar() {
   };
 
   const handleResetData = () => {
-    if (confirm('Atencion: Esta accion vaciara los datos de prueba. Deseas continuar?')) {
+    if (confirm('Atencion: Esta accion vaciara las ordenes, recepciones, tickets y pagos de prueba. Los modelos, recetas de materiales, inventario base y proveedores se conservan. Deseas continuar?')) {
       ProductionStore.clearAllData();
       window.location.reload();
     }
@@ -56,9 +57,10 @@ export default function Sidebar() {
     { label: '2. Recepción de Maquila', href: '/recepcion', icon: PackageCheck },
     { label: '3. Zapatos en Proceso', href: '/procesos', icon: Layers },
     { label: '4. Pagar Raya Semanal', href: '/pago-semanal', icon: Receipt },
-    { label: '5. Calcular Materiales', href: '/explosion-materiales', icon: Calculator },
-    { label: '6. Modelos y Almacen', href: '/catalogos', icon: FolderPlus },
+    { label: '5. Materiales y Tarjeta', href: '/explosion-materiales', icon: Calculator },
+    { label: '6. Modelos, Talleres y Almacén', href: '/catalogos', icon: FolderPlus },
     { label: '7. Otras Salidas', href: '/salidas-generales', icon: PackageMinus },
+    { label: 'Corte Sabatino', href: '/corte-sabatino', icon: ClipboardList },
   ];
 
   return (

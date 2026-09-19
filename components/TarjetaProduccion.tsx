@@ -50,7 +50,7 @@ ${data.materiales
   )
   .join('\n')}
 
-Troquel: ${data.troquel_especificacion || 'N/A'}
+Grabado / Diseño: ${data.troquel_especificacion || 'N/A'}
     `.trim();
 
     navigator.clipboard.writeText(text);
@@ -232,16 +232,16 @@ Troquel: ${data.troquel_especificacion || 'N/A'}
           </table>
         </div>
 
-        {/* SECCION TROQUELADO / NOM 20 */}
+        {/* SECCION GRABADO / NOM 20 */}
         {data.troquel_especificacion && (
           <div className="mt-2 border-2 border-black p-2 bg-zinc-50 flex items-center justify-between text-xs sm:text-sm font-bold uppercase">
             <div className="flex items-center gap-3">
               <span className="px-2 py-0.5 bg-black text-white font-mono font-black text-[10px] sm:text-xs rounded-sm">
                 NOM 20
               </span>
-              <span className="font-extrabold text-xs sm:text-sm">TROQUEL:</span>
+              <span className="font-extrabold text-xs sm:text-sm">GRABADO:</span>
               <span className="text-zinc-800 text-[11px] sm:text-xs font-semibold">
-                {data.troquel_especificacion.replace('NOM 20 / TROQUEL:', '').trim()}
+                {data.troquel_especificacion.replace(/^NOM\s*20\s*\/\s*(TROQUEL|GRABADO):\s*/i, '').trim()}
               </span>
             </div>
           </div>

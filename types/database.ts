@@ -59,6 +59,7 @@ export interface ItemRecetaBOM {
   consumo_total_unidad?: string; // Unidad de consumo total / compra (ej. "MT", "MILLAR", "PIEZA", "PAR")
   factor_conversion?: number; // Factor opcional para convertir unidad individual a total (ej. DCM/100 o CM/100)
   seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general';
+  costo_unitario?: number; // Precio del material en MXN por unidad de compra (ej. $250/MT, $15/PAR)
 }
 
 export interface FichaTecnicaModeloBOM {
@@ -79,6 +80,8 @@ export interface ResultadoExplosionMateriales {
   diferencia_stock: number; // stock_actual - requerida
   suficiente: boolean;
   seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general';
+  costo_unitario?: number; // Precio por unidad de compra
+  costo_material_total?: number; // costo_unitario * cantidad_requerida_total
 }
 
 export interface DetalleTallaCorrida {
@@ -111,23 +114,24 @@ export interface Maquilero {
 
 export interface ModeloCalzado {
   id: string;
-  nombre: string;  // Ej. "HELLEN - 3596", "Frozen", "Carol"
-  horma?: string;  // Ej. "HELLEN"
-  linea?: string;  // Ej. "HELLEN - 3596"
-  moldura?: string; // Ej. "3596"
-  estilo?: string; // Ej. "3596-02 CHAROL NEGRO ADRIANA BOCANEGRA (NEGRO)"
-  descripcion_estilo?: string; // Ej. "ZAPATILLA DESTALONADA CON MOÑO"
-  cliente_default?: string; // Ej. "ADRIANA BOCANEGRA"
-  troquel_especificacion?: string; // Ej. "NOM 20 / TROQUEL: SINTETICO / SINTETICO PLATA / BOCASSAO PLATA"
+  nombre: string;  // Ej. "MODELO 01 - 2026", "MODELO 02", "MODELO 03"
+  horma?: string;  // Ej. "ESTILO 01"
+  linea?: string;  // Ej. "MODELO 01 - 2026"
+  moldura?: string; // Ej. "2026"
+  estilo?: string; // Ej. "MODELO 01 - CHAROL NEGRO"
+  descripcion_estilo?: string; // Ej. "ZAPATILLA DE LÍNEA CLÁSICA"
+  cliente_default?: string; // Ej. "CLIENTE GENERAL"
+  troquel_especificacion?: string; // Ej. "NOM 20 / GRABADO: SINTÉTICO / NEGRO / PLATAFORMA"
 }
 
 export interface InventarioCrudo {
   id: string;
-  tipo_material: string; // ej. "CHAROL 0.8 HQ NEGRO VIRGEN", "HELLEN ESQ. 3596", "CAJA BOCASSAO..."
+  tipo_material: string; // ej. "CHAROL 0.8 HQ NEGRO VIRGEN", "MODELO 01 ESQ. 2026", "CAJA MODELO 01..."
   talla: number;         // ej. 0 si es general, o 22, 23, 24, 25, 26 si es por talla (plantas, suelas)
   cantidad_total: number; // Cantidad en almacén
   unidad_medida?: string; // MT, DCM, PAR, PIEZA, MILLAR, KG, LITROS
   seccion?: 'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general';
+  costo_unitario?: number; // Precio por unidad de medida en MXN (ej. $250 por MT de piel)
 }
 
 export interface OrdenSalida {
@@ -262,6 +266,7 @@ export interface TicketPagoSemanalGuardado {
   total_mermas?: number;
   total_cargos_qc_mxn?: number;
   total_pagar_mxn: number;
+  estado?: 'POR_PAGAR' | 'PAGADO';
   items: CorteSabatinoItem[];
 
   incidencias: {
@@ -283,7 +288,7 @@ export interface PedidoCliente {
   id: string;
   folio: string;
   cliente: string; // Ej. "Clasben", "Andrea", "Cklass"
-  modelo: string;  // Ej. "Frozen", "Carol"
+  modelo: string;  // Ej. "MODELO 01 - 2026", "MODELO 02"
   fecha_pedido: string; // YYYY-MM-DD
   total_pares: number;
   estatus: 'Pendiente' | 'En Producción' | 'Completado';
@@ -295,7 +300,7 @@ export interface SalidaGeneral {
   id: string;
   folio: string; // Ej. "SG-2026-001"
   fecha: string; // YYYY-MM-DD o ISO string
-  tipo_material: string; // Ej. "Pegamento", "Forro", "Planta Frozen", "Tacón 7cm", "Rollo Piel Sintética"
+  tipo_material: string; // Ej. "Pegamento", "Forro", "Planta Modelo 01", "Tacón 7cm", "Rollo Piel Sintética"
   talla?: number; // Ej. 24.0 o 0 si no aplica
   cantidad: number;
   unidad: string; // "pares", "piezas", "litros", "rollos", "unidades"
@@ -304,3 +309,63 @@ export interface SalidaGeneral {
   notas?: string;
 }
 
+// PROVEEDORES DE MATERIA PRIMA
+export interface Proveedor {
+  id: string;
+  nombre: string;     // Ej. "Pieles del Bajío S.A.", "Curtidora León"
+  contacto?: string;  // Nombre de la persona de contacto
+  telefono?: string;  // Teléfono de contacto
+  materiales_que_surte?: string; // Ej. "Pieles, Sintéticos, Forros"
+  notas?: string;
+}
+
+// ÓRDENES DE COMPRA GENERADAS
+export interface OrdenCompraItem {
+  material_nombre: string;
+  cantidad_requerida: number;
+  unidad_medida: string;
+  costo_unitario?: number;
+  costo_total?: number;
+}
+
+export interface OrdenCompra {
+  id: string;
+  folio: string;       // Ej. "OC-2026-001"
+  fecha: string;       // YYYY-MM-DD
+  proveedor_id: string;
+  proveedor_nombre: string;
+  estatus: 'Pendiente' | 'Enviada' | 'Recibida';
+  items: OrdenCompraItem[];
+  total_estimado_mxn: number;
+  notas?: string;
+}
+
+// ==========================================
+// FORRADO DE PLANTA (MVP)
+// ==========================================
+
+export type EstatusTicketForrado = 'Pendiente' | 'Parcial' | 'Completado';
+
+export interface TicketForrado {
+  id: string;
+  folio: string; // Ej. "FOR-2026-001"
+  fecha: string; // YYYY-MM-DD
+  maquilero_id: string; // Quien realiza el forrado
+  maquilero_nombre: string;
+  pares_enviados: number;
+  pares_recibidos: number;
+  pegamento_consumido: number; // en Litros
+  forro_consumido: number; // en Metros
+  estatus: EstatusTicketForrado;
+  notas?: string;
+  creado_en?: string;
+}
+
+export interface RecepcionForrado {
+  id: string;
+  ticket_id: string;
+  fecha: string; // YYYY-MM-DD
+  pares_recibidos: number;
+  notas?: string;
+  creado_en?: string;
+}

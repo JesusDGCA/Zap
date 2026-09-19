@@ -38,7 +38,7 @@ export default function SalidaPage() {
   const [historialOrdenes, setHistorialOrdenes] = useState<OrdenSalidaConMaquilero[]>([]);
 
   const [selectedMaquileroId, setSelectedMaquileroId] = useState<string>('');
-  const [selectedModeloNombre, setSelectedModeloNombre] = useState<string>('Frozen');
+  const [selectedModeloNombre, setSelectedModeloNombre] = useState<string>('MODELO 01 - 2026');
   const [insumosSeleccionados, setInsumosSeleccionados] = useState<string[]>(['Planta', 'Pegamento']);
 
   const [cantidadesTalla, setCantidadesTalla] = useState<{ [talla: number]: number }>({
@@ -132,6 +132,84 @@ export default function SalidaPage() {
     const texto = `${o.id} ${o.maquilero_nombre} ${o.modelo}`.toLowerCase();
     return texto.includes(busquedaHistorial.toLowerCase());
   });
+
+  const renderTicketSalida = (etiqueta: string) => (
+    ticketOrdenActual && (
+      <div className="print-sheet bg-white text-black rounded-none border-[2px] border-black print:shadow-none">
+        <div className="border-b-[2px] border-black px-4 py-3 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700">{etiqueta}</div>
+            <div className="text-lg font-black font-mono">{ticketOrdenActual.id}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700">Fecha</div>
+            <div className="text-sm font-bold font-mono">{ticketOrdenActual.fecha_envio}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-0 border-b-[2px] border-black text-[11px]">
+          <div className="border-r-[2px] border-black p-2">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">Maquilero</div>
+            <div className="mt-1 font-black text-sm uppercase">{ticketOrdenActual.maquilero_nombre}</div>
+          </div>
+          <div className="p-2">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">Modelo</div>
+            <div className="mt-1 font-black text-sm uppercase">{ticketOrdenActual.modelo}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 border-b-[2px] border-black text-[11px] font-black">
+          {['22', '23', '24', '25'].map((talla) => (
+            <div key={talla} className="border-r-[2px] border-black p-2 text-center">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-slate-600">#{talla}</div>
+              <div className="mt-1 font-mono text-base">{ticketOrdenActual.detalles.find((d) => Number(d.talla) === Number(talla))?.pares_enviados ?? 0}</div>
+            </div>
+          ))}
+          <div className="p-2 text-center">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-slate-600">Total</div>
+            <div className="mt-1 font-mono text-base">{ticketOrdenActual.total_pares_enviados}</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 border-b-[2px] border-black text-[11px] font-black">
+          {['26', '27', 'Piezas', 'Insumos'].map((talla) => (
+            <div key={talla} className="border-r-[2px] border-black last:border-r-0 p-2 text-center">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-slate-600">{talla}</div>
+              <div className="mt-1 font-mono text-base">
+                {talla === 'Piezas'
+                  ? ticketOrdenActual.total_pares_enviados
+                  : talla === 'Insumos'
+                    ? (ticketOrdenActual.insumos?.length ?? 0)
+                    : ticketOrdenActual.detalles.find((d) => Number(d.talla) === Number(talla))?.pares_enviados ?? 0}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4 space-y-3">
+          <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">Materiales entregados</div>
+          <div className="flex flex-wrap gap-1.5">
+            {(ticketOrdenActual.insumos?.length ? ticketOrdenActual.insumos : ['Sin insumos especificados']).map((insumo, index) => (
+              <span key={`${insumo}-${index}`} className="border border-black px-2 py-1 text-[10px] font-bold uppercase">
+                {insumo}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 border-t-[2px] border-black text-[11px]">
+          <div className="border-r-[2px] border-black p-3 min-h-[70px]">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">Firma maquilero</div>
+            <div className="mt-8 border-t-[2px] border-black pt-1 font-semibold text-center">________________</div>
+          </div>
+          <div className="p-3 min-h-[70px]">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">Firma fábrica</div>
+            <div className="mt-8 border-t-[2px] border-black pt-1 font-semibold text-center">________________</div>
+          </div>
+        </div>
+      </div>
+    )
+  );
 
   return (
     <div className="space-y-6 w-full max-w-5xl mx-auto">
@@ -341,79 +419,57 @@ export default function SalidaPage() {
 
           {/* VISTA DEL TICKET DE SALIDA GENERADO */}
           {ticketOrdenActual && (
-            <div className="bg-white dark:bg-zinc-900 border-2 border-blue-700 dark:border-blue-600 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 flex-wrap gap-2 print:border-black">
-                <div>
-                  <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase block">
-                    Nota de Salida a Maquila
-                  </span>
-                  <h3 className="text-xl font-black font-mono text-slate-900 dark:text-white">
-                    {ticketOrdenActual.id}
-                  </h3>
+            <>
+              <div className="bg-white dark:bg-zinc-900 border-2 border-blue-700 dark:border-blue-600 rounded-2xl p-6 shadow-xl space-y-4 print:hidden">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 flex-wrap gap-2 print:border-black">
+                  <div>
+                    <span className="text-xs font-mono font-bold text-blue-700 dark:text-blue-400 uppercase block">
+                      Nota de Salida a Maquila
+                    </span>
+                    <h3 className="text-xl font-black font-mono text-slate-900 dark:text-white">
+                      {ticketOrdenActual.id}
+                    </h3>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold uppercase flex items-center gap-1.5 shadow print:hidden"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Imprimir 2 Copias</span>
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold uppercase flex items-center gap-1.5 shadow print:hidden"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Imprimir Nota</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm">
-                <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
-                  <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Taller / Maquilero</span>
-                  <span className="font-bold text-slate-900 dark:text-white block mt-0.5">{ticketOrdenActual.maquilero_nombre}</span>
-                </div>
-                <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
-                  <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Modelo</span>
-                  <span className="font-bold text-slate-900 dark:text-white block mt-0.5">{ticketOrdenActual.modelo}</span>
-                </div>
-                <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
-                  <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Fecha de Envio</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white block mt-0.5">{ticketOrdenActual.fecha_envio}</span>
-                </div>
-                <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
-                  <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Total Pares</span>
-                  <span className="font-mono font-black text-base text-blue-700 dark:text-blue-400 block">{ticketOrdenActual.total_pares_enviados} p</span>
-                </div>
-              </div>
-
-              {/* TABLA DE TALLAS */}
-              <div className="border border-slate-200 dark:border-zinc-800 rounded-xl overflow-hidden">
-                <table className="w-full text-xs sm:text-sm text-left">
-                  <thead>
-                    <tr className="bg-slate-100 dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-800 font-mono font-bold text-slate-600 dark:text-zinc-400">
-                      <th className="py-2.5 px-3">Numero</th>
-                      <th className="py-2.5 px-3 text-right">Pares Enviados</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
-                    {ticketOrdenActual.detalles.map((dt) => (
-                      <tr key={dt.id}>
-                        <td className="py-2 px-3 font-mono font-bold">#{dt.talla}</td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">{dt.pares_enviados} pares</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {ticketOrdenActual.insumos && ticketOrdenActual.insumos.length > 0 && (
-                <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800 text-xs">
-                  <span className="font-bold text-slate-700 dark:text-zinc-300 block mb-1">Materiales que acompañan al lote:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {ticketOrdenActual.insumos.map((ins, i) => (
-                      <span key={i} className="px-2 py-0.5 bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 rounded font-semibold text-[11px]">
-                        {ins}
-                      </span>
-                    ))}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs sm:text-sm">
+                  <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Taller / Maquilero</span>
+                    <span className="font-bold text-slate-900 dark:text-white block mt-0.5">{ticketOrdenActual.maquilero_nombre}</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Modelo</span>
+                    <span className="font-bold text-slate-900 dark:text-white block mt-0.5">{ticketOrdenActual.modelo}</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Fecha de Envio</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white block mt-0.5">{ticketOrdenActual.fecha_envio}</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800">
+                    <span className="text-slate-500 dark:text-zinc-400 block text-[11px]">Total Pares</span>
+                    <span className="font-mono font-black text-base text-blue-700 dark:text-blue-400 block">{ticketOrdenActual.total_pares_enviados} p</span>
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className="rounded-xl border border-dashed border-blue-400 bg-blue-50/60 dark:bg-blue-950/20 p-3 text-xs text-blue-800 dark:text-blue-300 font-semibold">
+                  Se imprime en dos copias: una para el maquilero y otra para la fábrica. Queda registrada automáticamente para la raya semanal.
+                </div>
+              </div>
+
+              <div className="hidden print:block print-ticket-set">
+                {renderTicketSalida('COPIA MAQUILERO')}
+                {renderTicketSalida('COPIA FÁBRICA')}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -477,6 +533,53 @@ export default function SalidaPage() {
           )}
         </div>
       )}
+
+      <style jsx>{`
+        @page {
+          size: A4 portrait;
+          margin: 8mm;
+        }
+
+        .print-ticket-set {
+          width: 100%;
+          max-width: 100%;
+          display: block;
+        }
+
+        .print-sheet {
+          width: 100%;
+          min-height: 180mm;
+          page-break-after: always;
+          overflow: hidden;
+          box-sizing: border-box;
+          font-family: Arial, Helvetica, sans-serif;
+          color: #111827;
+        }
+
+        .print-sheet:last-child {
+          page-break-after: auto;
+        }
+
+        @media print {
+          body {
+            background: white !important;
+          }
+
+          .print-hidden, .print\:hidden {
+            display: none !important;
+          }
+
+          .print-ticket-set {
+            display: block !important;
+          }
+
+          .print-sheet {
+            display: block !important;
+            margin: 0 0 8mm 0;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

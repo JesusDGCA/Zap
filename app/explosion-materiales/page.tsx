@@ -13,6 +13,8 @@ import {
   Sliders,
   Sparkles,
   RotateCcw,
+  ShoppingCart,
+  Printer,
 } from 'lucide-react';
 import { ProductionStore } from '@/lib/store';
 import {
@@ -22,8 +24,11 @@ import {
   LoteProduccion,
   PedidoCliente,
   TarjetaProduccionData,
+  Proveedor,
+  OrdenCompra,
 } from '@/types/database';
 import TarjetaProduccion from '@/components/TarjetaProduccion';
+import { formatMXN } from '@/lib/utils';
 import {
   CLIENTES_PREDEFINIDOS,
   PROGRAMAS_PREDEFINIDOS,
@@ -32,21 +37,12 @@ import {
   CORRIDAS_PRESET,
 } from '@/lib/constants-calzado';
 
-const TALLAS_DISPONIBLES = [
-  '22',
-  '22.5',
-  '23',
-  '23.5',
-  '24',
-  '24.5',
-  '25',
-  '25.5',
-  '26',
-  '26.5',
-  '27',
-];
+const ORDEN_TALLAS = ['23', '23.5', '24', '24.5', '25', '25.5', '26', '26.5', '27', '22', '22.5'];
 
-const OPCIONES_CANTIDAD_TALLA = [0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 30, 40, 50];
+const TALLAS_DISPONIBLES = [...ORDEN_TALLAS];
+
+const TALLAS_BASE = ['23', '24', '25', '26', '27', '22'];
+const OPCIONES_CANTIDAD_TALLA = [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36, 40, 48, 50, 60, 72, 80, 96, 100, 120, 150, 200];
 
 export default function ExplosionMaterialesPage() {
   const [modelos, setModelos] = useState<ModeloCalzado[]>([]);
@@ -57,17 +53,17 @@ export default function ExplosionMaterialesPage() {
   const [activeTab, setActiveTab] = useState<'tarjeta' | 'mrp'>('tarjeta');
 
   // CAMPOS DE LA TARJETA VINCULADOS
-  const [selectedModeloNombre, setSelectedModeloNombre] = useState<string>('HELLEN - 3596');
+  const [selectedModeloNombre, setSelectedModeloNombre] = useState<string>('MODELO 01 - 2026');
   const [loteFolio, setLoteFolio] = useState<string>('1568');
   const [programaNum, setProgramaNum] = useState<string>('260228');
   const [fechaEntrega, setFechaEntrega] = useState<string>('Miercoles 29-Jul-2026');
-  const [cliente, setCliente] = useState<string>('ADRIANA BOCANEGRA');
-  const [horma, setHorma] = useState<string>('HELLEN');
-  const [linea, setLinea] = useState<string>('HELLEN - 3596');
-  const [moldura, setMoldura] = useState<string>('3596');
-  const [estilo, setEstilo] = useState<string>('3596-02 CHAROL NEGRO ADRIANA BOCANEGRA (NEGRO)');
-  const [descripcionEstilo, setDescripcionEstilo] = useState<string>('ZAPATILLA DESTALONADA CON MOÑO');
-  const [troquel, setTroquel] = useState<string>('NOM 20 / TROQUEL: SINTETICO / SINTETICO PLATA / BOCASSAO PLATA');
+  const [cliente, setCliente] = useState<string>('CLIENTE GENERAL');
+  const [horma, setHorma] = useState<string>('ESTILO 01');
+  const [linea, setLinea] = useState<string>('MODELO 01 - 2026');
+  const [moldura, setMoldura] = useState<string>('2026');
+  const [estilo, setEstilo] = useState<string>('MODELO 01 - CHAROL NEGRO');
+  const [descripcionEstilo, setDescripcionEstilo] = useState<string>('ZAPATILLA DE LÍNEA CLÁSICA');
+  const [troquel, setTroquel] = useState<string>('NOM 20 / GRABADO: SINTÉTICO / NEGRO / PLATAFORMA');
   const [renglon, setRenglon] = useState<string>('1 de 1');
 
   // Desglose de corrida de tallas
@@ -88,9 +84,18 @@ export default function ExplosionMaterialesPage() {
   const [panelConfigAbierto, setPanelConfigAbierto] = useState<boolean>(true);
   const [fichaActual, setFichaActual] = useState<FichaTecnicaModeloBOM | undefined>(undefined);
   const [resultados, setResultados] = useState<ResultadoExplosionMateriales[]>([]);
+  const [cantidadRapida, setCantidadRapida] = useState<number>(10);
+  const [ambitoDistribucion, setAmbitoDistribucion] = useState<'todas' | 'base'>('base');
 
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [errorMensaje, setErrorMensaje] = useState<string | null>(null);
+
+  // Proveedores y OC
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [ordenesCompra, setOrdenesCompra] = useState<OrdenCompra[]>([]);
+  const [selectedProveedorId, setSelectedProveedorId] = useState<string>('');
+  const [mostrarModalOC, setMostrarModalOC] = useState<boolean>(false);
+  const [ultimaOCGenerada, setUltimaOCGenerada] = useState<OrdenCompra | null>(null);
 
   // Calcular total de pares a partir de la corrida
   const totalParesCalculado = useMemo(() => {
@@ -102,6 +107,8 @@ export default function ExplosionMaterialesPage() {
     setModelos(listMod);
     setLotesWip(ProductionStore.getLotesProduccion());
     setPedidosClientes(ProductionStore.getPedidosCliente());
+    setProveedores(ProductionStore.getProveedores());
+    setOrdenesCompra(ProductionStore.getOrdenesCompra());
 
     if (listMod.length > 0 && !selectedModeloNombre) {
       setSelectedModeloNombre(listMod[0].nombre);
@@ -188,6 +195,30 @@ export default function ExplosionMaterialesPage() {
     setTallasCorrida(vacia);
   };
 
+  const ajustarTalla = (talla: string, valor: number) => {
+    setTallasCorrida((prev) => ({
+      ...prev,
+      [talla]: Math.max(0, Number(valor) || 0),
+    }));
+  };
+
+  const aplicarCantidadRapida = () => {
+    const tallasObjetivo = ambitoDistribucion === 'base' ? TALLAS_BASE : TALLAS_DISPONIBLES;
+
+    setTallasCorrida((prev) => {
+      const siguiente = { ...prev };
+      tallasObjetivo.forEach((talla) => {
+        siguiente[talla] = Number(cantidadRapida) || 0;
+      });
+      return siguiente;
+    });
+
+    setMensajeExito(
+      `Distribución rápida aplicada a ${tallasObjetivo.length} tallas con ${cantidadRapida} pares cada una.`
+    );
+    setTimeout(() => setMensajeExito(null), 2500);
+  };
+
   useEffect(() => {
     if (selectedModeloNombre && totalParesCalculado > 0) {
       const ficha = ProductionStore.getFichaTecnicaPorModelo(selectedModeloNombre);
@@ -244,11 +275,9 @@ export default function ExplosionMaterialesPage() {
   };
 
   const tarjetaData: TarjetaProduccionData = useMemo(() => {
-    const desgloseFiltrado = TALLAS_DISPONIBLES.filter(
-      (t) => (tallasCorrida[t] || 0) > 0 || ['23', '23.5', '24', '24.5', '25', '25.5', '26'].includes(t)
-    ).map((t) => ({
-      talla: t,
-      pares: tallasCorrida[t] || 0,
+    const desgloseFiltrado = ORDEN_TALLAS.filter((talla) => (tallasCorrida[talla] || 0) > 0).map((talla) => ({
+      talla,
+      pares: Number(tallasCorrida[talla]) || 0,
     }));
 
     return {
@@ -286,6 +315,30 @@ export default function ExplosionMaterialesPage() {
 
   const countSuficientes = resultados.filter((r) => r.suficiente).length;
   const countFaltantes = resultados.filter((r) => !r.suficiente).length;
+  const costoTotalFabricacion = resultados.reduce((sum, r) => sum + (r.costo_material_total || 0), 0);
+  const faltantesParaOC = resultados.filter((r) => !r.suficiente || r.diferencia_stock < 0);
+
+  const handleGenerarOrdenCompra = () => {
+    if (!selectedProveedorId) {
+      setErrorMensaje('Selecciona un proveedor para generar la Orden de Compra.');
+      setTimeout(() => setErrorMensaje(null), 3000);
+      return;
+    }
+    const prov = proveedores.find((p) => p.id === selectedProveedorId);
+    if (!prov) return;
+
+    const oc = ProductionStore.generarOrdenCompraDesdeExplosion(
+      resultados,
+      selectedProveedorId,
+      prov.nombre
+    );
+
+    setUltimaOCGenerada(oc);
+    setMostrarModalOC(false);
+    cargarDatos();
+    setMensajeExito(`Orden de Compra ${oc.folio} generada para ${prov.nombre}.`);
+    setTimeout(() => setMensajeExito(null), 4000);
+  };
 
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto">
@@ -594,33 +647,83 @@ export default function ExplosionMaterialesPage() {
                 </div>
               </div>
 
-              {/* MATRIZ DE TALLAS CON SELECTORES DESPLEGABLES */}
+              {/* DISTRIBUCIÓN RÁPIDA POR TALLA */}
+              <div className="mt-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/60 dark:bg-blue-950/20 p-3">
+                <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <span className="text-[11px] font-mono font-extrabold text-blue-800 dark:text-blue-300 uppercase tracking-wide">
+                    Carga rápida por talla
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-zinc-400">
+                    Asigna el mismo número a varias tallas en 1 clic
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-[130px_180px_1fr] gap-2 items-center">
+                  <input
+                    type="number"
+                    min={0}
+                    value={cantidadRapida}
+                    onChange={(e) => setCantidadRapida(Number(e.target.value) || 0)}
+                    className="w-full bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm font-mono font-bold focus:border-blue-600 focus:outline-none"
+                    placeholder="Pares"
+                  />
+
+                  <select
+                    value={ambitoDistribucion}
+                    onChange={(e) => setAmbitoDistribucion(e.target.value as 'todas' | 'base')}
+                    className="w-full bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 text-sm font-bold focus:border-blue-600 focus:outline-none"
+                  >
+                    <option value="base">Tallas base (22 a 27)</option>
+                    <option value="todas">Todas las tallas (incluye intermedias)</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    onClick={aplicarCantidadRapida}
+                    className="w-full bg-blue-700 hover:bg-blue-800 text-white rounded-lg px-3 py-2 text-sm font-bold uppercase transition-colors"
+                  >
+                    Aplicar a tallas
+                  </button>
+                </div>
+              </div>
+
+              {/* MATRIZ DE TALLAS CON CAPTURA NUMÉRICA NATURAL */}
               <div className="grid grid-cols-6 sm:grid-cols-11 gap-1.5 pt-1">
                 {TALLAS_DISPONIBLES.map((t) => (
                   <div key={t} className="text-center">
                     <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-zinc-400 block mb-0.5">
                       #{t}
                     </span>
-                    <select
-                      value={tallasCorrida[t] || 0}
-                      onChange={(e) =>
-                        setTallasCorrida((prev) => ({
-                          ...prev,
-                          [t]: Number(e.target.value) || 0,
-                        }))
-                      }
-                      className={`w-full bg-white dark:bg-zinc-900 border text-center font-mono font-black text-xs sm:text-sm rounded-lg py-1.5 focus:border-blue-600 focus:outline-none ${
-                        (tallasCorrida[t] || 0) > 0
-                          ? 'border-blue-600 text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30'
-                          : 'border-slate-300 dark:border-zinc-700 text-slate-400 dark:text-zinc-500'
-                      }`}
-                    >
-                      {OPCIONES_CANTIDAD_TALLA.map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt > 0 ? `${opt}p` : '-'}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => ajustarTalla(t, (tallasCorrida[t] || 0) - 1)}
+                        className="w-5 h-7 rounded-md bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 text-xs font-black hover:bg-slate-300 dark:hover:bg-zinc-700"
+                        aria-label={`Disminuir talla ${t}`}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={tallasCorrida[t] || 0}
+                        onChange={(e) => ajustarTalla(t, Number(e.target.value))}
+                        className={`w-full bg-white dark:bg-zinc-900 border text-center font-mono font-black text-xs sm:text-sm rounded-lg py-1.5 focus:border-blue-600 focus:outline-none ${
+                          (tallasCorrida[t] || 0) > 0
+                            ? 'border-blue-600 text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30'
+                            : 'border-slate-300 dark:border-zinc-700 text-slate-400 dark:text-zinc-500'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => ajustarTalla(t, (tallasCorrida[t] || 0) + 1)}
+                        className="w-5 h-7 rounded-md bg-slate-200 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 text-xs font-black hover:bg-slate-300 dark:hover:bg-zinc-700"
+                        aria-label={`Aumentar talla ${t}`}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -690,6 +793,24 @@ export default function ExplosionMaterialesPage() {
             </div>
           </div>
 
+          {/* COSTO TOTAL DE FABRICACIÓN */}
+          {costoTotalFabricacion > 0 && (
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+              <div>
+                <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 uppercase block">
+                  💰 Costo Total Estimado de Fabricación ({totalParesCalculado} pares)
+                </span>
+                <span className="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-700 dark:text-emerald-400">
+                  {formatMXN(costoTotalFabricacion)}
+                </span>
+                <span className="text-xs text-emerald-600 dark:text-emerald-500 block mt-0.5">
+                  Costo por par: {formatMXN(totalParesCalculado > 0 ? costoTotalFabricacion / totalParesCalculado : 0)}
+                </span>
+              </div>
+              <Calculator className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          )}
+
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 flex-wrap gap-2">
               <div>
@@ -701,12 +822,23 @@ export default function ExplosionMaterialesPage() {
                 </p>
               </div>
 
-              <button
-                onClick={handleAplicarDescuento}
-                className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold uppercase shadow flex items-center gap-2"
-              >
-                <MinusCircle className="w-4 h-4" /> Descontar del Almacen
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={handleAplicarDescuento}
+                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold uppercase shadow flex items-center gap-2"
+                >
+                  <MinusCircle className="w-4 h-4" /> Descontar del Almacen
+                </button>
+
+                {faltantesParaOC.length > 0 && (
+                  <button
+                    onClick={() => setMostrarModalOC(true)}
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-bold uppercase shadow flex items-center gap-2"
+                  >
+                    <ShoppingCart className="w-4 h-4" /> 📋 Pedir Material Faltante
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -718,6 +850,7 @@ export default function ExplosionMaterialesPage() {
                     <th className="py-2.5 px-3 font-bold text-center">Consumo x Par</th>
                     <th className="py-2.5 px-3 font-bold text-right">Requerido ({totalParesCalculado}p)</th>
                     <th className="py-2.5 px-3 font-bold text-right">Stock Actual</th>
+                    <th className="py-2.5 px-2 font-bold text-right">Costo $</th>
                     <th className="py-2.5 px-3 font-bold text-center">Estado</th>
                   </tr>
                 </thead>
@@ -737,6 +870,13 @@ export default function ExplosionMaterialesPage() {
                       <td className="py-2 px-3 text-right font-mono font-bold text-slate-800 dark:text-zinc-200">
                         {r.stock_actual} {r.unidad_medida_total}
                       </td>
+                      <td className="py-2 px-2 text-right font-mono text-xs">
+                        {r.costo_material_total ? (
+                          <span className="text-emerald-700 dark:text-emerald-400 font-bold">{formatMXN(r.costo_material_total)}</span>
+                        ) : (
+                          <span className="text-slate-300 dark:text-zinc-600">—</span>
+                        )}
+                      </td>
                       <td className="py-2 px-3 text-center">
                         {r.suficiente ? (
                           <span className="inline-flex items-center px-2 py-0.5 bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-lg border border-blue-200 dark:border-blue-800">
@@ -753,6 +893,115 @@ export default function ExplosionMaterialesPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PARA GENERAR ORDEN DE COMPRA */}
+      {mostrarModalOC && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-2xl max-w-lg w-full p-6 space-y-5">
+            <div className="border-b border-slate-200 dark:border-zinc-800 pb-3">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-amber-600" />
+                Generar Orden de Compra
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                Se creará una OC con los {faltantesParaOC.length} materiales faltantes.
+              </p>
+            </div>
+
+            <div>
+              <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1.5">
+                Seleccionar Proveedor (Desplegable)
+              </label>
+              <select
+                value={selectedProveedorId}
+                onChange={(e) => setSelectedProveedorId(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl px-3.5 py-2.5 text-sm font-bold focus:border-blue-600 focus:outline-none"
+              >
+                <option value="">-- Elige un proveedor --</option>
+                {proveedores.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre} {p.materiales_que_surte ? `(${p.materiales_que_surte})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-3 space-y-2 max-h-48 overflow-y-auto">
+              <p className="text-xs font-mono font-bold text-slate-500 dark:text-zinc-400 uppercase">Materiales a Pedir:</p>
+              {faltantesParaOC.map((f, i) => (
+                <div key={i} className="flex justify-between text-xs text-slate-700 dark:text-zinc-300">
+                  <span className="font-bold">{f.material_nombre}</span>
+                  <span className="font-mono">{Math.abs(f.diferencia_stock).toFixed(1)} {f.unidad_medida_total}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setMostrarModalOC(false)}
+                className="flex-1 py-3 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-700 dark:text-zinc-200 rounded-xl text-sm font-bold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleGenerarOrdenCompra}
+                className="flex-1 py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold uppercase transition-colors shadow"
+              >
+                Generar OC
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ÚLTIMA OC GENERADA (IMPRIMIBLE) */}
+      {ultimaOCGenerada && (
+        <div className="bg-white dark:bg-zinc-900 border-2 border-emerald-300 dark:border-emerald-800 rounded-2xl p-5 shadow-sm space-y-4 print:border-black">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-3 print:border-black">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase">
+                ✅ Orden de Compra: {ultimaOCGenerada.folio}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400">
+                Proveedor: <span className="font-bold">{ultimaOCGenerada.proveedor_nombre}</span> • Fecha: {ultimaOCGenerada.fecha}
+              </p>
+            </div>
+            <button
+              onClick={() => window.print()}
+              className="px-3 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-700 dark:text-zinc-200 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-300 dark:border-zinc-700 print:hidden"
+            >
+              <Printer className="w-4 h-4" /> Imprimir OC
+            </button>
+          </div>
+
+          <table className="w-full text-xs sm:text-sm text-left">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 font-mono text-xs uppercase">
+                <th className="py-2 px-3">Material</th>
+                <th className="py-2 px-3 text-right">Cantidad</th>
+                <th className="py-2 px-3 text-right">Costo Unit.</th>
+                <th className="py-2 px-3 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
+              {ultimaOCGenerada.items.map((item, i) => (
+                <tr key={i} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40">
+                  <td className="py-2 px-3 font-bold text-slate-900 dark:text-white">{item.material_nombre}</td>
+                  <td className="py-2 px-3 text-right font-mono">{item.cantidad_requerida} {item.unidad_medida}</td>
+                  <td className="py-2 px-3 text-right font-mono">{item.costo_unitario ? formatMXN(item.costo_unitario) : '—'}</td>
+                  <td className="py-2 px-3 text-right font-mono font-bold text-blue-700 dark:text-blue-400">{item.costo_total ? formatMXN(item.costo_total) : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="flex justify-end pt-2 border-t border-slate-200 dark:border-zinc-800">
+            <span className="text-base font-extrabold text-slate-900 dark:text-white">
+              Total Estimado: <span className="text-emerald-700 dark:text-emerald-400">{formatMXN(ultimaOCGenerada.total_estimado_mxn)}</span>
+            </span>
           </div>
         </div>
       )}

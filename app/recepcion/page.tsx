@@ -11,11 +11,14 @@ import {
   ArrowRight,
   ShieldAlert,
 } from 'lucide-react';
+// Importamos el store principal que maneja los datos en LocalStorage
 import { ProductionStore } from '@/lib/store';
 import { Maquilero, TipoDefectoQC } from '@/types/database';
 
+// Tallas estándar para calzado de dama (o genéricas)
 const TALLAS_CERRADAS = [22, 23, 24, 25, 26, 27];
 
+// Interface que define la estructura temporal de lo que estamos contando antes de guardar
 interface ItemCaptura {
   modelo: string;
   talla: number;
@@ -34,8 +37,8 @@ export default function RecepcionPage() {
   const [maquileros, setMaquileros] = useState<Maquilero[]>([]);
   const [selectedMaquileroId, setSelectedMaquileroId] = useState<string>('');
 
-  const [modelosDisponibles, setModelosDisponibles] = useState<string[]>(['HELLEN - 3596', 'Frozen', 'Carol']);
-  const [selectedModelo, setSelectedModelo] = useState<string>('HELLEN - 3596');
+  const [modelosDisponibles, setModelosDisponibles] = useState<string[]>(['MODELO 01 - 2026', 'MODELO 02', 'MODELO 03']);
+  const [selectedModelo, setSelectedModelo] = useState<string>('MODELO 01 - 2026');
 
   const [selectedTalla, setSelectedTalla] = useState<number>(24);
   const [capturasMap, setCapturasMap] = useState<{ [key: string]: ItemCaptura }>({});
@@ -44,14 +47,17 @@ export default function RecepcionPage() {
   const [mensajeExito, setMensajeExito] = useState<string | null>(null);
   const [errorValidacion, setErrorValidacion] = useState<string | null>(null);
 
+  // Al cargar la página, traemos los maquileros desde localStorage usando el Store
   useEffect(() => {
     const listMaq = ProductionStore.getMaquileros();
     setMaquileros(listMaq);
+    // Si hay maquileros registrados, seleccionamos el primero por defecto
     if (listMaq.length > 0) {
       setSelectedMaquileroId(listMaq[0].id);
     }
   }, []);
 
+  // Cuando cambia el maquilero seleccionado, buscamos qué modelos tiene pendientes por entregar
   useEffect(() => {
     if (selectedMaquileroId) {
       const res = ProductionStore.getModelosDisponiblesMaquilero(selectedMaquileroId);
@@ -126,6 +132,7 @@ export default function RecepcionPage() {
     e.preventDefault();
     setErrorValidacion(null);
 
+    // Validación básica antes de guardar
     if (!selectedMaquileroId) {
       setErrorValidacion('Por favor selecciona un maquilero.');
       return;
@@ -136,6 +143,8 @@ export default function RecepcionPage() {
       return;
     }
 
+    // Aquí GUARDAMOS LA RECEPCIÓN EN LOCALSTORAGE
+    // ProductionStore guarda los pares completados que más tarde leerá "Pago Semanal"
     const resultado = ProductionStore.registrarRecepcionDirecta({
       maquilero_id: selectedMaquileroId,
       items: listaCapturados.map((it) => ({
@@ -156,6 +165,7 @@ export default function RecepcionPage() {
       `Recepcion guardada: ${resultado.totalRegistrados} pares completos registrados con exito.`
     );
 
+    // Limpiamos los estados para la siguiente captura
     setCapturasMap({});
     setNotaIncidencia('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
