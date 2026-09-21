@@ -85,6 +85,7 @@ export default function CatalogosPage() {
   const [nuevoMaterialConsumoTotalUnidad, setNuevoMaterialConsumoTotalUnidad] = useState<string>('MT');
   const [nuevoItemSeccion, setNuevoItemSeccion] = useState<'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general'>('corte');
   const [recetaEnEdicion, setRecetaEnEdicion] = useState<ItemRecetaBOM[]>([]);
+  const [itemRecetaEditandoId, setItemRecetaEditandoId] = useState<string | null>(null);
 
   // FORMULARIO INSUMOS ALMACEN (CON SELECTS)
   const [nuevoInsumoNombre, setNuevoInsumoNombre] = useState<string>('');
@@ -93,21 +94,25 @@ export default function CatalogosPage() {
   const [nuevoInsumoUnidad, setNuevoInsumoUnidad] = useState<string>('MT');
   const [nuevoInsumoSeccion, setNuevoInsumoSeccion] = useState<'corte' | 'troquel' | 'suela_planta_tacon' | 'empaque' | 'general'>('corte');
   const [nuevoInsumoCosto, setNuevoInsumoCosto] = useState<string>('');
+  const [insumoEditandoId, setInsumoEditandoId] = useState<string | null>(null);
 
   // FORMULARIO MAQUILEROS
   const [nuevoMaquileroNombre, setNuevoMaquileroNombre] = useState<string>('');
   const [nuevoMaquileroTarifa, setNuevoMaquileroTarifa] = useState<string>('');
+  const [maquileroEditandoId, setMaquileroEditandoId] = useState<string | null>(null);
 
   // FORMULARIO PROVEEDORES
   const [nuevoProvNombre, setNuevoProvNombre] = useState<string>('');
   const [nuevoProvContacto, setNuevoProvContacto] = useState<string>('');
   const [nuevoProvTelefono, setNuevoProvTelefono] = useState<string>('');
   const [nuevoProvMateriales, setNuevoProvMateriales] = useState<string>('');
+  const [proveedorEditandoId, setProveedorEditandoId] = useState<string | null>(null);
 
   // FORMULARIO PEDIDOS (CON SELECTS)
   const [nuevoClienteNombre, setNuevoClienteNombre] = useState<string>(CLIENTES_PREDEFINIDOS[0]);
   const [nuevoClienteModelo, setNuevoClienteModelo] = useState<string>('');
   const [nuevoClienteNotas, setNuevoClienteNotas] = useState<string>('');
+  const [pedidoEditandoId, setPedidoEditandoId] = useState<string | null>(null);
   const [tallasPedido, setTallasPedido] = useState<{ [talla: number]: number }>({
     22.0: 0,
     23.0: 0,
@@ -243,7 +248,7 @@ export default function CatalogosPage() {
     }
 
     const nuevoItem: ItemRecetaBOM = {
-      id: `r-${Date.now()}`,
+      id: itemRecetaEditandoId || `r-${Date.now()}`,
       pieza: nuevoItemPieza,
       material_nombre: nuevoMaterialNombre,
       cantidad_por_par: Math.max(0.001, parseFloat(nuevoMaterialCantidad) || 1.0),
@@ -253,10 +258,13 @@ export default function CatalogosPage() {
       seccion: nuevoItemSeccion,
     };
 
-    const actualizada = [...recetaEnEdicion, nuevoItem];
+    const actualizada = itemRecetaEditandoId
+      ? recetaEnEdicion.map((item) => (item.id === itemRecetaEditandoId ? nuevoItem : item))
+      : [...recetaEnEdicion, nuevoItem];
     setRecetaEnEdicion(actualizada);
     ProductionStore.guardarFichaTecnicaBOM(selectedBOMModelo, actualizada);
     setNuevoMaterialCantidad('1.0');
+    setItemRecetaEditandoId(null);
     cargarDatos();
     setMensaje(`Insumo "${nuevoItem.material_nombre}" añadido a la receta de ${selectedBOMModelo}.`);
     setTimeout(() => setMensaje(null), 2500);
@@ -269,6 +277,17 @@ export default function CatalogosPage() {
     cargarDatos();
   };
 
+  const handleEditarItemReceta = (item: ItemRecetaBOM) => {
+    setItemRecetaEditandoId(item.id);
+    setNuevoItemPieza(item.pieza || PIEZAS_CALZADO_PREDEFINIDAS[0]);
+    setNuevoMaterialNombre(item.material_nombre);
+    setNuevoMaterialCantidad(String(item.cantidad_por_par));
+    setNuevoMaterialUnidad(item.unidad_medida);
+    setNuevoMaterialConsumoTotalUnidad(item.consumo_total_unidad || item.unidad_medida);
+    setNuevoItemSeccion(item.seccion || 'general');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // GESTION DE INVENTARIO
   const handleCrearInsumo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -277,20 +296,43 @@ export default function CatalogosPage() {
     const cantidadNum = parseFloat(nuevoInsumoCantidad) || 0;
     const costoNum = parseFloat(nuevoInsumoCosto) || 0;
 
-    ProductionStore.agregarInsumoInventario(
-      nuevoInsumoNombre,
-      nuevoInsumoTalla,
-      cantidadNum,
-      nuevoInsumoUnidad,
-      nuevoInsumoSeccion,
-      costoNum > 0 ? costoNum : undefined
-    );
+    if (insumoEditandoId) {
+      ProductionStore.editarInsumoInventario(insumoEditandoId, {
+        tipo_material: nuevoInsumoNombre,
+        talla: nuevoInsumoTalla,
+        cantidad_total: cantidadNum,
+        unidad_medida: nuevoInsumoUnidad,
+        seccion: nuevoInsumoSeccion,
+        costo_unitario: costoNum,
+      });
+    } else {
+      ProductionStore.agregarInsumoInventario(
+        nuevoInsumoNombre,
+        nuevoInsumoTalla,
+        cantidadNum,
+        nuevoInsumoUnidad,
+        nuevoInsumoSeccion,
+        costoNum > 0 ? costoNum : undefined
+      );
+    }
 
     setNuevoInsumoCantidad('100');
     setNuevoInsumoCosto('');
+    setInsumoEditandoId(null);
     cargarDatos();
-    setMensaje(`Material "${nuevoInsumoNombre}" registrado en el almacén.`);
+    setMensaje(insumoEditandoId ? `Material "${nuevoInsumoNombre}" actualizado.` : `Material "${nuevoInsumoNombre}" registrado en el almacén.`);
     setTimeout(() => setMensaje(null), 2500);
+  };
+
+  const handleEditarInsumoClick = (insumo: InventarioCrudo) => {
+    setInsumoEditandoId(insumo.id);
+    setNuevoInsumoNombre(insumo.tipo_material);
+    setNuevoInsumoTalla(insumo.talla || 0);
+    setNuevoInsumoCantidad(String(insumo.cantidad_total));
+    setNuevoInsumoUnidad(insumo.unidad_medida || 'MT');
+    setNuevoInsumoSeccion(insumo.seccion || 'general');
+    setNuevoInsumoCosto(insumo.costo_unitario ? String(insumo.costo_unitario) : '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleActualizarStock = (id: string, delta: number) => {
@@ -311,12 +353,27 @@ export default function CatalogosPage() {
     if (!nuevoMaquileroNombre.trim()) return;
 
     const tarifa = parseFloat(nuevoMaquileroTarifa) || 0;
-    ProductionStore.crearMaquilero(nuevoMaquileroNombre, tarifa);
+    if (maquileroEditandoId) {
+      ProductionStore.editarMaquilero(maquileroEditandoId, {
+        nombre: nuevoMaquileroNombre,
+        tarifa_por_par: tarifa,
+      });
+    } else {
+      ProductionStore.crearMaquilero(nuevoMaquileroNombre, tarifa);
+    }
     setNuevoMaquileroNombre('');
     setNuevoMaquileroTarifa('');
+    setMaquileroEditandoId(null);
     cargarDatos();
-    setMensaje('Maquilero registrado.');
+    setMensaje(maquileroEditandoId ? 'Maquilero actualizado.' : 'Maquilero registrado.');
     setTimeout(() => setMensaje(null), 2500);
+  };
+
+  const handleEditarMaquileroClick = (maquilero: Maquilero) => {
+    setMaquileroEditandoId(maquilero.id);
+    setNuevoMaquileroNombre(maquilero.nombre);
+    setNuevoMaquileroTarifa(String(maquilero.tarifa_por_par));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // GESTION DE PEDIDOS
@@ -335,18 +392,36 @@ export default function CatalogosPage() {
       return;
     }
 
-    ProductionStore.crearPedidoCliente({
+    const datosPedido = {
       cliente: nuevoClienteNombre,
       modelo: nuevoClienteModelo,
       notas: nuevoClienteNotas,
       desglose_tallas: desglose,
-    });
+    };
+
+    if (pedidoEditandoId) {
+      ProductionStore.editarPedidoCliente(pedidoEditandoId, datosPedido);
+    } else {
+      ProductionStore.crearPedidoCliente(datosPedido);
+    }
 
     setNuevoClienteNotas('');
     setTallasPedido({ 22.0: 0, 23.0: 0, 24.0: 0, 25.0: 0, 26.0: 0 });
+    setPedidoEditandoId(null);
     cargarDatos();
-    setMensaje(`Pedido de ${nuevoClienteNombre} por ${totalPares} pares registrado.`);
+    setMensaje(pedidoEditandoId ? `Pedido de ${nuevoClienteNombre} actualizado.` : `Pedido de ${nuevoClienteNombre} por ${totalPares} pares registrado.`);
     setTimeout(() => setMensaje(null), 2500);
+  };
+
+  const handleEditarPedido = (pedido: PedidoCliente) => {
+    setPedidoEditandoId(pedido.id);
+    setNuevoClienteNombre(pedido.cliente);
+    setNuevoClienteModelo(pedido.modelo);
+    setNuevoClienteNotas(pedido.notas || '');
+    setTallasPedido(
+      pedido.desglose_tallas.reduce((acc, item) => ({ ...acc, [Number(item.talla)]: item.pares_solicitados }), {})
+    );
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleEliminarPedido = (id: string, folio: string) => {
@@ -361,20 +436,36 @@ export default function CatalogosPage() {
     e.preventDefault();
     if (!nuevoProvNombre.trim()) return;
 
-    ProductionStore.crearProveedor({
+    const datosProveedor = {
       nombre: nuevoProvNombre,
       contacto: nuevoProvContacto || undefined,
       telefono: nuevoProvTelefono || undefined,
       materiales_que_surte: nuevoProvMateriales || undefined,
-    });
+    };
+
+    if (proveedorEditandoId) {
+      ProductionStore.editarProveedor(proveedorEditandoId, datosProveedor);
+    } else {
+      ProductionStore.crearProveedor(datosProveedor);
+    }
 
     setNuevoProvNombre('');
     setNuevoProvContacto('');
     setNuevoProvTelefono('');
     setNuevoProvMateriales('');
+    setProveedorEditandoId(null);
     cargarDatos();
-    setMensaje('Proveedor registrado correctamente.');
+    setMensaje(proveedorEditandoId ? 'Proveedor actualizado correctamente.' : 'Proveedor registrado correctamente.');
     setTimeout(() => setMensaje(null), 2500);
+  };
+
+  const handleEditarProveedorClick = (proveedor: Proveedor) => {
+    setProveedorEditandoId(proveedor.id);
+    setNuevoProvNombre(proveedor.nombre);
+    setNuevoProvContacto(proveedor.contacto || '');
+    setNuevoProvTelefono(proveedor.telefono || '');
+    setNuevoProvMateriales(proveedor.materiales_que_surte || '');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleEliminarProveedor = (id: string, nombre: string) => {
@@ -729,7 +820,7 @@ export default function CatalogosPage() {
             <div className="border-b border-slate-200 dark:border-zinc-800 pb-2.5">
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2">
                 <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" />
-                <span>Anadir Insumo a la Receta</span>
+                <span>{itemRecetaEditandoId ? 'Editar Insumo de la Receta' : 'Anadir Insumo a la Receta'}</span>
               </h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                 Selecciona la pieza y el material sin escribir a mano.
@@ -876,7 +967,7 @@ export default function CatalogosPage() {
                 type="submit"
                 className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold uppercase transition-colors shadow"
               >
-                Guardar en la Receta
+                {itemRecetaEditandoId ? 'Actualizar en la Receta' : 'Guardar en la Receta'}
               </button>
             </form>
           </div>
@@ -948,6 +1039,13 @@ export default function CatalogosPage() {
                         </td>
                         <td className="py-2 px-3 text-right">
                           <button
+                            onClick={() => handleEditarItemReceta(item)}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 transition-colors"
+                            title="Editar insumo de la receta"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleEliminarItemReceta(item.id)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                             title="Eliminar insumo de la receta"
@@ -972,10 +1070,17 @@ export default function CatalogosPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* FORMULARIO AGREGAR MATERIAL */}
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-2.5">
-              <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" />
-              <span>Ingresar Material al Almacen</span>
-            </h2>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+                <span>{insumoEditandoId ? 'Editar Material' : 'Ingresar Material al Almacen'}</span>
+              </h2>
+              {insumoEditandoId && (
+                <button type="button" onClick={() => setInsumoEditandoId(null)} className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white">
+                  Cancelar
+                </button>
+              )}
+            </div>
 
             <form onSubmit={handleCrearInsumo} className="space-y-3.5">
               <div>
@@ -1103,7 +1208,7 @@ export default function CatalogosPage() {
                 type="submit"
                 className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold uppercase transition-colors shadow"
               >
-                Agregar a Stock
+                {insumoEditandoId ? 'Actualizar Material' : 'Agregar a Stock'}
               </button>
             </form>
           </div>
@@ -1207,6 +1312,13 @@ export default function CatalogosPage() {
                       </td>
                       <td className="py-2.5 px-2 text-right">
                         <button
+                          onClick={() => handleEditarInsumoClick(inv)}
+                          className="p-1.5 text-slate-500 hover:text-blue-600 transition-colors"
+                          title="Editar material"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleEliminarInsumo(inv.id, inv.tipo_material)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                           title="Eliminar insumo"
@@ -1229,9 +1341,17 @@ export default function CatalogosPage() {
       {activeTab === 'maquileros' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-2.5">
-              <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" /> Nuevo Maquilero
-            </h2>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+                {maquileroEditandoId ? 'Editar Maquilero' : 'Nuevo Maquilero'}
+              </h2>
+              {maquileroEditandoId && (
+                <button type="button" onClick={() => setMaquileroEditandoId(null)} className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white">
+                  Cancelar
+                </button>
+              )}
+            </div>
             <form onSubmit={handleCrearMaquilero} className="space-y-4">
               <div>
                 <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1.5">
@@ -1264,7 +1384,7 @@ export default function CatalogosPage() {
                 type="submit"
                 className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold uppercase transition-colors shadow"
               >
-                Guardar Maquilero
+                {maquileroEditandoId ? 'Actualizar Maquilero' : 'Guardar Maquilero'}
               </button>
             </form>
           </div>
@@ -1279,6 +1399,7 @@ export default function CatalogosPage() {
                   <tr className="border-b border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 font-mono text-xs uppercase">
                     <th className="py-3 px-3 font-semibold">Nombre</th>
                     <th className="py-3 px-3 font-semibold text-right">Tarifa / Par</th>
+                    <th className="py-3 px-2 font-semibold text-right">Acción</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
@@ -1287,6 +1408,11 @@ export default function CatalogosPage() {
                       <td className="py-3 px-3 text-slate-900 dark:text-white font-bold">{m.nombre}</td>
                       <td className="py-3 px-3 text-right font-mono font-extrabold text-blue-700 dark:text-blue-400 text-sm sm:text-base">
                         {formatMXN(m.tarifa_por_par)}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <button onClick={() => handleEditarMaquileroClick(m)} className="p-1.5 text-slate-500 hover:text-blue-600 transition-colors" title="Editar maquilero">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1304,7 +1430,7 @@ export default function CatalogosPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-2.5">
-              <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" /> Registrar Pedido de Cliente
+              <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" /> {pedidoEditandoId ? 'Editar Pedido de Cliente' : 'Registrar Pedido de Cliente'}
             </h2>
             <form onSubmit={handleCrearPedido} className="space-y-4">
               <div>
@@ -1368,7 +1494,7 @@ export default function CatalogosPage() {
                 type="submit"
                 className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold uppercase transition-colors shadow"
               >
-                Registrar Pedido
+                {pedidoEditandoId ? 'Actualizar Pedido' : 'Registrar Pedido'}
               </button>
             </form>
           </div>
@@ -1394,6 +1520,13 @@ export default function CatalogosPage() {
                     <div className="flex items-center gap-4">
                       <span className="font-mono font-bold text-slate-900 dark:text-white text-sm sm:text-base">{p.total_pares} pares</span>
                       <button
+                        onClick={() => handleEditarPedido(p)}
+                        className="p-1.5 text-slate-500 hover:text-blue-600 transition-colors"
+                        title="Editar pedido"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => handleEliminarPedido(p.id, p.folio)}
                         className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"
                         title="Eliminar pedido"
@@ -1415,9 +1548,17 @@ export default function CatalogosPage() {
       {activeTab === 'proveedores' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-2.5">
-              <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" /> Registrar Proveedor
-            </h2>
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 pb-2.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white uppercase flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+                {proveedorEditandoId ? 'Editar Proveedor' : 'Registrar Proveedor'}
+              </h2>
+              {proveedorEditandoId && (
+                <button type="button" onClick={() => setProveedorEditandoId(null)} className="text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white">
+                  Cancelar
+                </button>
+              )}
+            </div>
             <form onSubmit={handleCrearProveedor} className="space-y-4">
               <div>
                 <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1.5">
@@ -1472,7 +1613,7 @@ export default function CatalogosPage() {
                 type="submit"
                 className="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-sm font-bold uppercase transition-colors shadow"
               >
-                Guardar Proveedor
+                {proveedorEditandoId ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
               </button>
             </form>
           </div>
@@ -1503,6 +1644,13 @@ export default function CatalogosPage() {
                         <td className="py-3 px-3 font-mono text-slate-600 dark:text-zinc-300">{p.telefono || '—'}</td>
                         <td className="py-3 px-3 text-xs text-slate-500 dark:text-zinc-400">{p.materiales_que_surte || '—'}</td>
                         <td className="py-3 px-2 text-right">
+                          <button
+                            onClick={() => handleEditarProveedorClick(p)}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 transition-colors"
+                            title="Editar proveedor"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => handleEliminarProveedor(p.id, p.nombre)}
                             className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors"

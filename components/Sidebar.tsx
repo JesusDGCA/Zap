@@ -56,7 +56,7 @@ export default function Sidebar() {
     { label: '1. Salida a Maquila', href: '/salida', icon: Truck },
     { label: '2. Recepción de Maquila', href: '/recepcion', icon: PackageCheck },
     { label: '3. Zapatos en Proceso', href: '/procesos', icon: Layers },
-    { label: '4. Pagar Raya Semanal', href: '/pago-semanal', icon: Receipt },
+    { label: '4. Pago maquila', href: '/pago-semanal', icon: Receipt },
     { label: '5. Materiales y Tarjeta', href: '/explosion-materiales', icon: Calculator },
     { label: '6. Modelos, Talleres y Almacén', href: '/catalogos', icon: FolderPlus },
     { label: '7. Otras Salidas', href: '/salidas-generales', icon: PackageMinus },
@@ -66,7 +66,7 @@ export default function Sidebar() {
   return (
     <>
       {/* HEADER MOVIL Y TABLET */}
-      <header className="w-full bg-white dark:bg-black border-b border-slate-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between md:hidden sticky top-0 z-40 transition-colors">
+      <header className="w-full bg-white dark:bg-black border-b border-slate-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between md:hidden sticky top-0 z-40 transition-colors print:hidden">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -80,7 +80,7 @@ export default function Sidebar() {
               <Factory className="w-5 h-5" />
             </div>
             <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white uppercase tracking-tight">
-              Calzado & Taller
+              FÁBRICA DE CALZADO
             </span>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function Sidebar() {
               {(!isCollapsed || mobileOpen) && (
                 <div className="transition-opacity duration-150">
                   <span className="font-extrabold text-sm tracking-wide text-slate-900 dark:text-white uppercase block whitespace-nowrap">
-                    CALZADO <span className="text-blue-700 dark:text-blue-400">PRO</span>
+                    FÁBRICA DE CALZADO
                   </span>
                   <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium block whitespace-nowrap">
                     Sistema de Taller

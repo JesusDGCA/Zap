@@ -79,7 +79,7 @@
 
 @media print {
   @page {
-    margin: 0.6cm;
+    margin: 0.35cm;
     size: letter portrait;
   }
 
@@ -90,6 +90,13 @@
     height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+
+  body > div,
+  body > div > div,
+  main {
+    background: white !important;
+    min-height: 0 !important;
   }
 
   .print\:hidden {
@@ -107,5 +114,42 @@
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Las dos copias deben conservarse completas y caber en una sola hoja. */
+  .print-ticket-set {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.12cm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: white !important;
+  }
+
+  .print-sheet {
+    width: 100% !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    font-size: 9px !important;
+  }
+
+  .print-sheet .p-4 {
+    padding: 0.28rem !important;
+  }
+
+  .print-sheet .p-3 {
+    padding: 0.24rem !important;
+  }
+
+  .print-sheet .p-2 {
+    padding: 0.2rem !important;
+  }
+
+  .print-sheet .mt-8 {
+    margin-top: 0.45rem !important;
+  }
+
+  .print-sheet [class*="min-h-"] {
+    min-height: 34px !important;
   }
 }

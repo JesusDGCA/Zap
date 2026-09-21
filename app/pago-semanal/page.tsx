@@ -55,7 +55,7 @@ function generarBaucherPDF(
   // Encabezado
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text('BAUCHER DE PAGO — RAYA SEMANAL', 105, 20, { align: 'center' });
+  doc.text('COMPROBANTE DE PAGO DE MAQUILA', 105, 20, { align: 'center' });
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
@@ -116,12 +116,12 @@ export default function PagoSemanalPage() {
   // ── Tab ──
   const [activeTab, setActiveTab] = useState<'generar' | 'historial'>('generar');
 
-  // ── Pestaña GENERAR: Calcular raya de TODOS los maquileros ──
+  // ── Pestaña GENERAR: Calcular pago de TODOS los maquileros ──
   const weekRange = getWorkWeekRange();
   const [fechaInicio, setFechaInicio] = useState<string>(weekRange.inicio);
   const [fechaFin, setFechaFin] = useState<string>(weekRange.fin);
   const [resumenes, setResumenes] = useState<ResumenPagoSemanal[]>([]);
-  const [filtroMaquileroCalculo, setFiltroMaquileroCalculo] = useState<string>('TODOS');
+  const [filtroMaquileroCalculo, setFiltroMaquileroCalculo] = useState<string>('');
   const [maquileroExpandido, setMaquileroExpandido] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -145,22 +145,41 @@ export default function PagoSemanalPage() {
   // Notificación
   const [notif, setNotif] = useState<{ texto: string; tipo: 'success' | 'info' | 'error' } | null>(null);
 
-  // ── Cálculo raya en tiempo real para TODOS los talleres ──
+  // ── Cálculo en tiempo real de pagos que todavía no tienen ticket ──
   useEffect(() => {
     if (fechaInicio && fechaFin) {
       const maquilerosLocal = ProductionStore.getMaquileros();
+      const ticketsGuardados = ProductionStore.getTicketsPagoSemanal();
       const todosResumenes: ResumenPagoSemanal[] = [];
 
       for (const maq of maquilerosLocal) {
-        const res = ProductionStore.calcularPagoSemanal(maq.id, fechaInicio, fechaFin);
-        // Sólo incluimos en la lista a los talleres que tienen recepciones/items entregados en ese periodo
+        const recepcionesYaPagadas = new Set(
+          ticketsGuardados
+            .filter(
+              (ticket) =>
+                ticket.maquilero_id === maq.id &&
+                ticket.fecha_inicio === fechaInicio &&
+                ticket.fecha_fin === fechaFin
+            )
+            .flatMap((ticket) => ticket.items.map((item) => item.recepcion_id))
+        );
+        const res = ProductionStore.calcularPagoSemanal(
+          maq.id,
+          fechaInicio,
+          fechaFin,
+          recepcionesYaPagadas
+        );
+
+        // Mostramos sólo recepciones que todavía no están en un ticket.
         if (res && res.items.length > 0) {
           todosResumenes.push(res);
         }
       }
+      const idsDisponibles = todosResumenes.map((resumen) => resumen.maquilero.id);
+      setFiltroMaquileroCalculo((actual) => (actual && idsDisponibles.includes(actual) ? actual : idsDisponibles[0] || ''));
       setResumenes(todosResumenes);
     }
-  }, [fechaInicio, fechaFin]);
+  }, [fechaInicio, fechaFin, activeTab]);
 
   // ── Carga de tickets desde LocalStorage (en vez de Supabase para Netlify) ──
   const cargarTickets = useCallback(() => {
@@ -212,6 +231,9 @@ export default function PagoSemanalPage() {
         ? `Ticket de ${resumenesParaGuardar[0].maquilero.nombre} generado correctamente.`
         : `${resumenesParaGuardar.length} notas de liquidación generadas correctamente.`;
 
+      const idsGuardados = new Set(resumenesParaGuardar.map((resumen) => resumen.maquilero.id));
+      setResumenes((actuales) => actuales.filter((resumen) => !idsGuardados.has(resumen.maquilero.id)));
+      setMaquileroExpandido(null);
       mostrarNotif(texto);
       setActiveTab('historial');
     } catch (e: any) {
@@ -309,7 +331,7 @@ export default function PagoSemanalPage() {
   );
 
   const resumenesFiltrados = resumenes.filter((resumen) =>
-    filtroMaquileroCalculo === 'TODOS' ? true : resumen.maquilero.id === filtroMaquileroCalculo
+    resumen.maquilero.id === filtroMaquileroCalculo
   );
 
   const maquilerosCalculo = ProductionStore.getMaquileros().filter((maq) =>
@@ -334,7 +356,7 @@ export default function PagoSemanalPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white uppercase flex items-center gap-2">
             <Receipt className="w-7 h-7 text-blue-700 dark:text-blue-500" />
-            <span>Pagar Raya Semanal</span>
+            <span>Pago maquila</span>
           </h1>
           <p className="text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
             Liquidación de maquileros agrupada por taller
@@ -349,7 +371,7 @@ export default function PagoSemanalPage() {
                 : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
             }`}
           >
-            Calcular Raya
+            Calcular pago
           </button>
           <button
             onClick={() => { setActiveTab('historial'); setTicketDetalle(null); }}
@@ -379,7 +401,7 @@ export default function PagoSemanalPage() {
       )}
 
       {/* ════════════════════════════════════════
-          TAB 1: CALCULAR RAYA
+          TAB 1: CALCULAR PAGO DE MAQUILA
       ════════════════════════════════════════ */}
       {activeTab === 'generar' && (
         <div className="space-y-5">
@@ -387,7 +409,7 @@ export default function PagoSemanalPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-xl">
               <div>
                 <label className="text-xs font-mono font-bold text-slate-600 dark:text-zinc-400 uppercase block mb-1">
-                  Fecha Inicio de Raya
+                  Fecha inicio del pago
                 </label>
                 <input
                   type="date"
@@ -413,7 +435,7 @@ export default function PagoSemanalPage() {
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Talleres con entregas por cobrar ({resumenesFiltrados.length})</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Pagos pendientes por generar ({resumenesFiltrados.length})</h2>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
@@ -422,7 +444,7 @@ export default function PagoSemanalPage() {
                   onChange={(e) => setFiltroMaquileroCalculo(e.target.value)}
                   className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="TODOS">Todos los talleres</option>
+                  <option value="">Selecciona un taller</option>
                   {maquilerosCalculo.map((maq) => (
                     <option key={maq.id} value={maq.id}>{maq.nombre}</option>
                   ))}
@@ -430,12 +452,12 @@ export default function PagoSemanalPage() {
 
                 {resumenesFiltrados.length > 0 && (
                   <button
-                    onClick={() => handleGuardarTodos(filtroMaquileroCalculo === 'TODOS' ? undefined : filtroMaquileroCalculo)}
+                    onClick={() => handleGuardarTodos(filtroMaquileroCalculo)}
                     disabled={isSaving}
                     className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold flex items-center gap-1.5 shadow disabled:opacity-50 transition-all"
                   >
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    <span>{isSaving ? 'Guardando...' : filtroMaquileroCalculo === 'TODOS' ? 'Generar Todos los Tickets' : 'Generar Ticket del Taller'}</span>
+                    <span>{isSaving ? 'Guardando...' : 'Generar ticket de este taller'}</span>
                   </button>
                 )}
               </div>
@@ -445,9 +467,9 @@ export default function PagoSemanalPage() {
           {!resumenes || resumenes.length === 0 ? (
             <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-2 shadow-sm">
               <Receipt className="w-10 h-10 text-slate-400 mx-auto" />
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Sin entregas en este periodo</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">No hay pagos pendientes por generar</h3>
               <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Ningún maquilero tiene recepciones de calzado completadas para estas fechas.
+                Las recepciones de este periodo ya tienen ticket o todavía no se han registrado.
               </p>
             </div>
           ) : resumenesFiltrados.length === 0 ? (

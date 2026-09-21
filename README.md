@@ -122,8 +122,8 @@ Para verificar el funcionamiento completo del sistema paso a paso, te sugerimos 
 2. Selecciona un modelo y escribe la cantidad de pares a fabricar (ej. `100` pares).
 3. Revisa la tabla de requerimientos calculada automáticamente en base a la Ficha Técnica (BOM) comparada contra el inventario actual.
 
-### Paso 5: Generar el Ticket de Pago Semanal
-1. Navega a **Pago Semanal** (`/pago-semanal`).
+### Paso 5: Generar el comprobante de Pago maquila
+1. Navega a **Pago maquila** (`/pago-semanal`).
 2. Selecciona el taller (*Taller San Francisco*) y el rango de fechas.
 3. Observa la liquidación automática: calculará los pares trabajados por la tarifa (`45 pares * $25.00`), descontará las penalizaciones/cargos de calidad y te generará el resumen listo para guardar o imprimir.
 

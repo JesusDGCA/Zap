@@ -1,6 +1,6 @@
 /**
  * lib/supabase-tickets.ts
- * Capa de datos async para tickets de pago semanal — usa Supabase.
+ * Capa de datos async para tickets de pago de maquila — usa Supabase.
  * Toda la lógica de CRUD de tickets vive aquí, alejada de la UI.
  */
 import { supabase } from './supabase';

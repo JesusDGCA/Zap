@@ -261,9 +261,92 @@ export const INITIAL_MAQUILEROS: Maquilero[] = [
   { id: 'mq-luis', nombre: 'Luis', tarifa_por_par: 6 },
   { id: 'mq-maria', nombre: 'María', tarifa_por_par: 7 },
 ];
-export const INITIAL_ORDENES_SALIDA: OrdenSalida[] = [];
-export const INITIAL_ORDENES_SALIDA_DETALLE: OrdenSalidaDetalle[] = [];
-export const INITIAL_RECEPCIONES: Recepcion[] = [];
+function fechaDemo(diasAtras: number): string {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() - diasAtras);
+  return fecha.toISOString().split('T')[0];
+}
+
+function fechaDemoISO(diasAtras: number): string {
+  return `${fechaDemo(diasAtras)}T12:00:00.000Z`;
+}
+
+export const INITIAL_ORDENES_SALIDA: OrdenSalida[] = [
+  {
+    id: 'ORD-DEMO-001',
+    maquilero_id: 'mq-miguel',
+    modelo: 'MODELO 01 - 2026',
+    fecha_envio: fechaDemo(3),
+    estatus: 'Pendiente',
+    insumos: ['Planta', 'Pegamento'],
+  },
+  {
+    id: 'ORD-DEMO-002',
+    maquilero_id: 'mq-juan',
+    modelo: 'MODELO 02',
+    fecha_envio: fechaDemo(2),
+    estatus: 'Pendiente',
+    insumos: ['Planta', 'Forro'],
+  },
+  {
+    id: 'ORD-DEMO-003',
+    maquilero_id: 'mq-rosa',
+    modelo: 'MODELO 03',
+    fecha_envio: fechaDemo(1),
+    estatus: 'Pendiente',
+    insumos: ['Planta', 'Tacon'],
+  },
+];
+
+export const INITIAL_ORDENES_SALIDA_DETALLE: OrdenSalidaDetalle[] = [
+  { id: 'dt-demo-001', orden_id: 'ORD-DEMO-001', talla: 23, pares_enviados: 40 },
+  { id: 'dt-demo-002', orden_id: 'ORD-DEMO-001', talla: 24, pares_enviados: 35 },
+  { id: 'dt-demo-003', orden_id: 'ORD-DEMO-002', talla: 25, pares_enviados: 50 },
+  { id: 'dt-demo-004', orden_id: 'ORD-DEMO-003', talla: 26, pares_enviados: 30 },
+];
+
+export const INITIAL_RECEPCIONES: Recepcion[] = [
+  {
+    id: 'rec-demo-001',
+    orden_detalle_id: 'dt-demo-001',
+    fecha_recepcion: fechaDemoISO(2),
+    pares_completos_entregados: 40,
+    faltantes_izquierdos: 0,
+    faltantes_derechos: 0,
+    nota: 'Ejemplo de recepción completa.',
+    alerta_activa: false,
+  },
+  {
+    id: 'rec-demo-002',
+    orden_detalle_id: 'dt-demo-002',
+    fecha_recepcion: fechaDemoISO(1),
+    pares_completos_entregados: 35,
+    faltantes_izquierdos: 0,
+    faltantes_derechos: 0,
+    nota: 'Ejemplo de recepción completa.',
+    alerta_activa: false,
+  },
+  {
+    id: 'rec-demo-003',
+    orden_detalle_id: 'dt-demo-003',
+    fecha_recepcion: fechaDemoISO(1),
+    pares_completos_entregados: 45,
+    faltantes_izquierdos: 3,
+    faltantes_derechos: 2,
+    nota: 'Ejemplo con piezas faltantes para revisar en pago maquila.',
+    alerta_activa: true,
+  },
+  {
+    id: 'rec-demo-004',
+    orden_detalle_id: 'dt-demo-004',
+    fecha_recepcion: fechaDemoISO(0),
+    pares_completos_entregados: 30,
+    faltantes_izquierdos: 0,
+    faltantes_derechos: 0,
+    nota: 'Ejemplo de recepción del día.',
+    alerta_activa: false,
+  },
+];
 export const INITIAL_TICKETS_PAGOS: TicketPagoSemanalGuardado[] = [];
 export const INITIAL_PEDIDOS_CLIENTES: PedidoCliente[] = [];
 export const INITIAL_SALIDAS_GENERALES: SalidaGeneral[] = [];
@@ -294,6 +377,26 @@ function checkAndAutoPurgeOnce(): void {
   // Marca de inicialización para no repetir lógica cada vez
   if (localStorage.getItem('calzado_pwa_system_v2_initialized') !== 'true') {
     localStorage.setItem('calzado_pwa_system_v2_initialized', 'true');
+  }
+
+  // En una instalación nueva dejamos recepciones de ejemplo conectadas a sus
+  // órdenes y detalles para que Pago maquila pueda probarse de inmediato.
+  if (localStorage.getItem('calzado_pwa_demo_maquila_v1') !== 'true') {
+    const ordenes = JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDENES) || '[]');
+    const detalles = JSON.parse(localStorage.getItem(STORAGE_KEYS.DETALLES) || '[]');
+    const recepciones = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECEPCIONES) || '[]');
+
+    if (recepciones.length === 0) {
+      const idsOrdenes = new Set(ordenes.map((orden: OrdenSalida) => orden.id));
+      const idsDetalles = new Set(detalles.map((detalle: OrdenSalidaDetalle) => detalle.id));
+      const ordenesDemo = INITIAL_ORDENES_SALIDA.filter((orden) => !idsOrdenes.has(orden.id));
+      const detallesDemo = INITIAL_ORDENES_SALIDA_DETALLE.filter((detalle) => !idsDetalles.has(detalle.id));
+
+      localStorage.setItem(STORAGE_KEYS.ORDENES, JSON.stringify([...ordenesDemo, ...ordenes]));
+      localStorage.setItem(STORAGE_KEYS.DETALLES, JSON.stringify([...detallesDemo, ...detalles]));
+      localStorage.setItem(STORAGE_KEYS.RECEPCIONES, JSON.stringify(INITIAL_RECEPCIONES));
+    }
+    localStorage.setItem('calzado_pwa_demo_maquila_v1', 'true');
   }
 }
 
@@ -668,6 +771,22 @@ export class ProductionStore {
     return nuevo;
   }
 
+  static editarMaquilero(id: string, update: Partial<Pick<Maquilero, 'nombre' | 'tarifa_por_par'>>): Maquilero | null {
+    const list = this.getMaquileros();
+    const index = list.findIndex((m) => m.id === id);
+    if (index === -1) return null;
+
+    list[index] = {
+      ...list[index],
+      ...(update.nombre !== undefined ? { nombre: update.nombre.trim() } : {}),
+      ...(update.tarifa_por_par !== undefined
+        ? { tarifa_por_par: Math.max(0, update.tarifa_por_par) }
+        : {}),
+    };
+    setStoredData(STORAGE_KEYS.MAQUILEROS, list);
+    return list[index];
+  }
+
   // CATÁLOGO DE MODELOS / ESTILOS
   static getModelos(): ModeloCalzado[] {
     return getStoredData(STORAGE_KEYS.MODELOS, INITIAL_MODELOS);
@@ -761,6 +880,23 @@ export class ProductionStore {
     const index = list.findIndex((i) => i.id === id);
     if (index === -1) return null;
     list[index].cantidad_total = Math.max(0, Number((list[index].cantidad_total + deltaCantidad).toFixed(2)));
+    setStoredData(STORAGE_KEYS.INVENTARIO, list);
+    return list[index];
+  }
+
+  static editarInsumoInventario(id: string, update: Partial<InventarioCrudo>): InventarioCrudo | null {
+    const list = this.getInventarioCrudo();
+    const index = list.findIndex((i) => i.id === id);
+    if (index === -1) return null;
+
+    list[index] = {
+      ...list[index],
+      ...update,
+      tipo_material: update.tipo_material?.trim() || list[index].tipo_material,
+      talla: update.talla !== undefined ? Math.max(0, update.talla) : list[index].talla,
+      cantidad_total: update.cantidad_total !== undefined ? Math.max(0, update.cantidad_total) : list[index].cantidad_total,
+      costo_unitario: update.costo_unitario && update.costo_unitario > 0 ? update.costo_unitario : undefined,
+    };
     setStoredData(STORAGE_KEYS.INVENTARIO, list);
     return list[index];
   }
@@ -1155,7 +1291,8 @@ export class ProductionStore {
   static calcularCorteSabatino(
     maquileroId: string,
     fechaInicio: string,
-    fechaFin: string
+    fechaFin: string,
+    recepcionesExcluidas: Set<string> = new Set()
   ): ResumenCorteSabatino | null {
     const maquileros = this.getMaquileros();
     const maquilero = maquileros.find((m) => m.id === maquileroId);
@@ -1182,6 +1319,7 @@ export class ProductionStore {
     let totalCargosQCMXN = 0;
 
     for (const rec of recepciones) {
+      if (recepcionesExcluidas.has(rec.id)) continue;
       const dt = detallesMap.get(rec.orden_detalle_id);
       if (!dt) continue;
 
@@ -1235,6 +1373,7 @@ export class ProductionStore {
     const recepcionesForrado = this.getRecepcionesForrado().filter(r => ticketsForradoIds.has(r.ticket_id));
 
     for (const rec of recepcionesForrado) {
+      if (recepcionesExcluidas.has(rec.id)) continue;
       const recDate = parseFechaHoraLocal(rec.fecha, false);
       if (recDate >= inicio && recDate <= fin) {
         const ticket = ticketsForrado.find(t => t.id === rec.ticket_id);
@@ -1282,9 +1421,10 @@ export class ProductionStore {
   static calcularPagoSemanal(
     maquileroId: string,
     fechaInicio: string,
-    fechaFin: string
+    fechaFin: string,
+    recepcionesExcluidas: Set<string> = new Set()
   ): ResumenPagoSemanal | null {
-    return this.calcularCorteSabatino(maquileroId, fechaInicio, fechaFin);
+    return this.calcularCorteSabatino(maquileroId, fechaInicio, fechaFin, recepcionesExcluidas);
   }
 
   // GESTIÓN DE HISTORIAL DE TICKETS DE PAGOS SEMANALES
@@ -1379,6 +1519,36 @@ export class ProductionStore {
   static eliminarPedidoCliente(id: string): void {
     const pedidos = this.getPedidosCliente().filter((p) => p.id !== id);
     setStoredData(STORAGE_KEYS.PEDIDOS, pedidos);
+  }
+
+  static editarPedidoCliente(id: string, update: {
+    cliente?: string;
+    modelo?: string;
+    notas?: string;
+    desglose_tallas?: { talla: number; pares: number }[];
+  }): PedidoCliente | null {
+    const pedidos = this.getPedidosCliente();
+    const index = pedidos.findIndex((p) => p.id === id);
+    if (index === -1) return null;
+
+    const desglose = update.desglose_tallas
+      ? update.desglose_tallas.map((item) => ({
+          talla: item.talla,
+          pares_solicitados: Math.max(0, item.pares),
+          pares_enviados_lotes: 0,
+        }))
+      : pedidos[index].desglose_tallas;
+
+    pedidos[index] = {
+      ...pedidos[index],
+      ...(update.cliente !== undefined ? { cliente: update.cliente.trim() } : {}),
+      ...(update.modelo !== undefined ? { modelo: update.modelo.trim() } : {}),
+      ...(update.notas !== undefined ? { notas: update.notas.trim() || undefined } : {}),
+      desglose_tallas: desglose,
+      total_pares: desglose.reduce((sum, item) => sum + item.pares_solicitados, 0),
+    };
+    setStoredData(STORAGE_KEYS.PEDIDOS, pedidos);
+    return pedidos[index];
   }
 
   // GESTIÓN DE SALIDAS GENERALES DE MATERIAL (CONSUMO INTERNO, MERMA, PRUEBAS, ETC.)
@@ -1482,6 +1652,23 @@ export class ProductionStore {
     list.unshift(nuevo);
     setStoredData(STORAGE_KEYS.PROVEEDORES, list);
     return nuevo;
+  }
+
+  static editarProveedor(id: string, update: Partial<Proveedor>): Proveedor | null {
+    const list = this.getProveedores();
+    const index = list.findIndex((p) => p.id === id);
+    if (index === -1) return null;
+
+    list[index] = {
+      ...list[index],
+      ...update,
+      nombre: update.nombre?.trim() || list[index].nombre,
+      contacto: update.contacto?.trim() || undefined,
+      telefono: update.telefono?.trim() || undefined,
+      materiales_que_surte: update.materiales_que_surte?.trim() || undefined,
+    };
+    setStoredData(STORAGE_KEYS.PROVEEDORES, list);
+    return list[index];
   }
 
   static eliminarProveedor(id: string): void {

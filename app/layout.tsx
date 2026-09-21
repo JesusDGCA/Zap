@@ -4,7 +4,7 @@ import SidebarLayout from '@/components/SidebarLayout';
 
 export const metadata: Metadata = {
   title: 'Control de Producción & Almacén | Fábrica de Calzado',
-  description: 'Sistema para control de calzado en taller, materiales, recepción y pago de raya semanal.',
+  description: 'Sistema para control de calzado en taller, materiales, recepción y pago de maquila.',
   manifest: '/manifest.json',
 };
 

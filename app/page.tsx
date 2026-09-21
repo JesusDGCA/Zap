@@ -256,7 +256,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <h2 className="text-lg font-black uppercase leading-snug">
-              4. Pagar Raya Semanal
+              4. Pago maquila
             </h2>
             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
               Calcular e imprimir nota de pago

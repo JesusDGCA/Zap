@@ -32,7 +32,8 @@ export function formatDateShort(dateString: string): string {
 }
 
 /**
- * Obtiene el rango de fechas de la semana de trabajo (Lunes a Sábado)
+ * Obtiene el rango de fechas de la semana de trabajo (Lunes a Domingo).
+ * Incluir el domingo evita ocultar una recepción registrada el mismo día.
  */
 export function getWorkWeekRange(): { inicio: string; fin: string } {
   const now = new Date();
@@ -44,14 +45,14 @@ export function getWorkWeekRange(): { inicio: string; fin: string } {
   monday.setDate(now.getDate() + diffToMonday);
   monday.setHours(0, 0, 0, 0);
 
-  // Calcular Sábado
-  const saturday = new Date(monday);
-  saturday.setDate(monday.getDate() + 5);
-  saturday.setHours(23, 59, 59, 999);
+  // Calcular Domingo
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
 
   return {
     inicio: toFechaLocal(monday),
-    fin: toFechaLocal(saturday),
+    fin: toFechaLocal(sunday),
   };
 }
 

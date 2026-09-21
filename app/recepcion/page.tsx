@@ -144,7 +144,7 @@ export default function RecepcionPage() {
     }
 
     // Aquí GUARDAMOS LA RECEPCIÓN EN LOCALSTORAGE
-    // ProductionStore guarda los pares completados que más tarde leerá "Pago Semanal"
+    // ProductionStore guarda la recepción que leerá directamente "Pago maquila".
     const resultado = ProductionStore.registrarRecepcionDirecta({
       maquilero_id: selectedMaquileroId,
       items: listaCapturados.map((it) => ({
